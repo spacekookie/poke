@@ -1,22 +1,30 @@
 #!/usr/bin/python
 
-#############################################################################
-# Copyright (c) 2014 Katharina Sabel <katharina.sabel@2rsoftworks.de>		#
-# www.katharinasabel.de | www.2rsoftworks.de								#
-# 																			#
-# Licensed under the Apache License, Version 2.0 (the "License");			#
-# you may not use this file except in compliance with the License.			#
-# You may obtain a copy of the License at									#
-# 																			#
-#        http://www.apache.org/licenses/LICENSE-2.0							#
-# 																			#
-# 																			#
-# Unless required by applicable law or agreed to in writing, software		#
-# distributed under the License is distributed on an "AS IS" BASIS,			#
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.	#
-# See the License for the specific language governing permissions and		#
-# limitations under the License.											#
-#############################################################################
+'''
+
+Copyright (c) 2014 Katharina Sabel <katharina.sabel@2rsoftworks.de>
+Copyright (c) 2014 Random Robot Softworks
+www.katharinasabel.de | www.2rsoftworks.de
+
+Licensed under the Apache License, Version 2.0 (the "License");		
+you may not use this file except in compliance with the License.		
+You may obtain a copy of the License at	
+
+		http://www.apache.org/licenses/LICENSE-2.0						
+									
+Unless required by applicable law or agreed to in writing, software	
+distributed under the License is distributed on an "AS IS" BASIS,		
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Found a bug? Report it in the repository issue tracker:
+
+		https://github.com/SpaceKookie/Poke
+					or
+		https://bitbucket.org/SpaceKookie/poke-ssh-utility
+
+'''
 
 from optparse import OptionParser
 from subprocess import call
@@ -37,7 +45,7 @@ if os.path.isfile(HOME + "/.poke/servers.cfg") is False:
 
 	# Because the config doesn't exist yet it needs to be created!
 	configWriter = open(HOME + '/.poke/servers.cfg', 'wb+')
-	header = ["Server config for poke v%s CLT by Katharina Sabel" % ver, "Email katharina.sabel@2rsoftworks.de suggestions and comments", "Visit support.2rsoftworks.de to report issues", "", "You can add your servers as sections below.", "Each section needs to have the Alias and URL field set but can have another field to determine", "if XTerm should be used for the SSH session.", "Note that the shorthands 'h', '?' and 'x' are reserved by the application.", "", "Name: Define a helpful name for your server", "ShortHand: short command-line argument", "LongHand: long command-line argument", "URL: server address", "User: server user (if needed)", "XDef: Default XTerm settings"]
+	header = ["Server config with poke v%s by Katharina Sabel (Updates may cause incompatibility)" % ver, "Email katharina.sabel@2rsoftworks.de suggestions and comments", "Visit support.2rsoftworks.de to report issues", "", "You can add your servers as sections below.", "Each section needs to have the Alias and URL field set but can have another field to determine", "if XTerm should be used for the SSH session.", "Note that the shorthands 'h', '?' and 'x' are reserved by the application.", "", "Name: Define a helpful name for your server", "ShortHand: short command-line argument", "LongHand: long command-line argument", "URL: server address", "User: server user (if needed)", "XDef: Default XTerm settings"]
 
 	body = ["", "[SampleServer]", "Name: Jane's NAS", "ShortHand: j", "LongHand: jane", "URL: 111.222.333.444", "User: Jane", "XDef: False"]
 
@@ -146,7 +154,7 @@ if len(sys.argv) == 1:
 
 def getXTermSetting():
 	if UseXTerm:
-		return "-x"
+		return "-X"
 	else:
 		return ""
 
