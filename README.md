@@ -1,0 +1,4 @@
+Poke
+====
+
+SSH connection manager
