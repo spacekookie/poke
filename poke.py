@@ -31,36 +31,34 @@ from subprocess import call
 import ConfigParser
 import os.path
 import sys
+import time
+from util import Installer
 
 #Home variable for python paths
 HOME = os.path.expanduser("~")
-ver = "0.1.7"
+VERSION = "0.2.1"
 
-# This if statement will only fire if poke hasn't been set up on the system yet! If it has this block will be skipped!
+# Creating setup object just in case.
+setup = Installer(HOME, VERSION)
+serverSetup = False
+keySetup = False
+
+# Checks if the application header file exists. Header file will contain logs and changes
+if os.path.isfile(HOME + "/.poke/.a") is False:
+	HEADER = open(HOME + '/.poke/.a', 'wb+')
+	HEADER.write("Init Application on " + time.strftime("%c"))
+	HEADER.close()
+
 if os.path.isfile(HOME + "/.poke/servers.cfg") is False:
-	print("Setting up poke on your machine...")
-	if os.path.isdir(HOME + "/.poke") is False:
-		call("mkdir ~/.poke", shell=True)
-		call("chmod -R 766 ~/.poke", shell=True)
+	serverSetup = setup.servers()
 
-	# Because the config doesn't exist yet it needs to be created!
-	configWriter = open(HOME + '/.poke/servers.cfg', 'wb+')
-	header = ["Server config with poke v%s by Katharina Sabel (Updates may cause incompatibility)" % ver, "Email katharina.sabel@2rsoftworks.de suggestions and comments", "Visit support.2rsoftworks.de to report issues", "", "You can add your servers as sections below.", "Each section needs to have the Alias and URL field set but can have another field to determine", "if XTerm should be used for the SSH session.", "Note that the shorthands 'h', '?' and 'x' are reserved by the application.", "", "Name: Define a helpful name for your server", "ShortHand: short command-line argument", "LongHand: long command-line argument", "URL: server address", "User: server user (if needed)", "XDef: Default XTerm settings"]
+if os.path.isfile(HOME + "/.poke/keys.cfg") is False:
+	keySetup = setup.keys()
 
-	body = ["", "[SampleServer]", "Name: Jane's NAS", "ShortHand: j", "LongHand: jane", "URL: 111.222.333.444", "User: Jane", "XDef: False"]
-
-	for item in header:
-		if item == "":
-			configWriter.write(item + "\n")
-		else:
-			configWriter.write("# " + item + "\n")
-	for item in body:
-		configWriter.write(item + "\n")
-	configWriter.close()
-
-	print "\nSuccessfully wrote 'server.cfg'. You should probably go to ~/.poke/ and set up your servers!\n"
+# Exists the application without setting up server info. Only
+if(serverSetup and keySetup):
 	introParser = OptionParser()
-	introParser.add_option("-?", action="store_false", help="Open 'Nano' to editor your server config")
+	introParser.add_option("-?", action="store_false", help="Open 'Vi' to editor your config files!", callback=runVi)
 	introParser.add_option("-x", action="store_false", default=False, help="Uses XTerm for the SSH session")
 	print(introParser.format_help())
 	sys.exit()
@@ -83,12 +81,12 @@ def ConfigSectionmMap(section):
 			dict1[option] = None
 	return dict1
 
-def runNaNo(option, opt_str, value, parser):
-	call("nano %s/.poke/servers.cfg" % HOME, shell=True)
+def runVi(option, opt_str, value, parser):
+	call("vi %s/.poke/" % HOME, shell=True)
 
 # Options Paser
-parser = OptionParser(version="%s" % ver)
-parser.add_option("-?", action="callback", help="Open 'Nano' to edit your server config file", callback=runNaNo)
+parser = OptionParser(version="%s" % VERSION)
+parser.add_option("-?", action="callback", help="Open 'Vi' to editor your config files!", callback=runVi)
 parser.add_option("-x", action="store_true", help="Overwrite XTerm settings for the ssh session", dest="xterm")
 
 servers = configReader.sections()

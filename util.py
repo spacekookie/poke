@@ -37,12 +37,12 @@ class Installer:
 	def __init__(self, HOME, VERSION):
 		self.HOME = HOME
 		self.VERSION = VERSION
-
-	def setup(self):
-		print("Setting up poke on your machine...")
 		if os.path.isdir(self.HOME + "/.poke") is False:
-			call("mkdir ~/.poke", shell=True)
-			call("chmod -R 766 ~/.poke", shell=True)
+			call("mkdir %s/.poke" % self.HOME, shell=True)
+			call("chmod -R 766 %s/.poke" % self.HOME, shell=True)
+
+	def servers(self):
+		print("Creating server config file on this machine ...")
 
 		# Because the config doesn't exist yet it needs to be created!
 		configWriter = open(self.HOME + '/.poke/servers.cfg', 'wb+')
@@ -60,11 +60,35 @@ class Installer:
 		configWriter.close()
 
 		print "\nSuccessfully wrote 'server.cfg'. You should probably go to ~/.poke/ and set up your servers!\n"
-		introParser = OptionParser()
-		introParser.add_option("-?", action="store_false", help="Open 'Nano' to editor your server config")
-		introParser.add_option("-x", action="store_false", default=False, help="Uses XTerm for the SSH session")
-		print(introParser.format_help())
-		sys.exit()
+		return True
+
+	def keys(self):
+		print("Creating ssh-key config file on this machine ...")
+
+		keyWriter = open(self.HOME + '/.poke/keys.cfg', 'wb+')
+		header = ["Keybase config for poke %s CLT by Katharina Sabel" % self.VERSION, "Email katharina.sabel@2rsoftworks.de suggestions and comments", "Email katharina.sabel@2rsoftworks.de suggestions and comments", "Visit support.2rsoftworks.de to report issues", "", "You can add your private SSH keys down below", "Each section needs to have an ID field, the path and access priority", "Note that you can enter any ID combination you want.",""]
+
+		body = ["[Key1]", "ID: standard", "ShortID: st", "Path: rsa_id", "Access: 1", "", "[Key2]", "ID: work-key", "ShortID: wk", "Path: work_id", "Access: 0"]
+
+		footer = ["Usage", "", "poke -n -KY standard", "poke --work --KEY work-key", "Will connect to the server 'n' with the work-key overwriting the default choice (if any is set)"]
+
+		for item in header:
+			if item == "":
+				keyWriter.write(item + "\n")
+			else:
+				keyWriter.write("# " + item + "\n")
+
+		for item in body:
+			keyWriter.write(item + "\n")
+
+		for item in footer:
+			if item == "":
+				keyWriter.write(item + "\n")
+			else:
+				keyWriter.write("# " + item + "\n")
+		keyWriter.close()
+		print "\nSuccessfully wrote 'keys.cfg'. You should probably go to ~/.poke/ and set up your ssh-keys!\n"
+		return True
 
 class KeyBase:
 
