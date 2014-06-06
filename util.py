@@ -59,18 +59,18 @@ class Installer:
 			configWriter.write(item + "\n")
 		configWriter.close()
 
-		print "\nSuccessfully wrote 'server.cfg'. You should probably go to ~/.poke/ and set up your servers!\n"
+		print "Successfully wrote 'server.cfg'. You should probably go to ~/.poke/ and set up your servers!\n"
 		return True
 
 	def keys(self):
 		print("Creating ssh-key config file on this machine ...")
 
 		keyWriter = open(self.HOME + '/.poke/keys.cfg', 'wb+')
-		header = ["Keybase config for poke %s CLT by Katharina Sabel" % self.VERSION, "Email katharina.sabel@2rsoftworks.de suggestions and comments", "Email katharina.sabel@2rsoftworks.de suggestions and comments", "Visit support.2rsoftworks.de to report issues", "", "You can add your private SSH keys down below", "Each section needs to have an ID field, the path and access priority", "Note that you can enter any ID combination you want.",""]
+		header = ["Keybase config for poke %s CLT by Katharina Sabel" % self.VERSION, "Email katharina.sabel@2rsoftworks.de suggestions and comments", "Visit support.2rsoftworks.de to report issues", "", "You can add your private SSH keys down below", "Each section needs to have an ID field, the path and access priority", "Note that you can enter any ID combination you want.",""]
 
 		body = ["[Key1]", "ID: standard", "ShortID: st", "Path: rsa_id", "Access: 1", "", "[Key2]", "ID: work-key", "ShortID: wk", "Path: work_id", "Access: 0"]
 
-		footer = ["Usage", "", "poke -n -KY standard", "poke --work --KEY work-key", "Will connect to the server 'n' with the work-key overwriting the default choice (if any is set)"]
+		footer = ["","Usage", "poke -n -KY standard", "poke --work --KEY work-key", "Will connect to the server 'n' with the work-key overwriting the default choice (if any is set)", "[KeyName]", "ID: long-id", "ShortID: short-id", "Path: name of the key in your ~/.ssh direcoty. Note: other directories can be set in the ./poke/.a file", "Access Determines the access of the user account on your server. 0 --> root, 1 --> default 2+ --> limited. For your own convenience"]
 
 		for item in header:
 			if item == "":
@@ -87,7 +87,7 @@ class Installer:
 			else:
 				keyWriter.write("# " + item + "\n")
 		keyWriter.close()
-		print "\nSuccessfully wrote 'keys.cfg'. You should probably go to ~/.poke/ and set up your ssh-keys!\n"
+		print "Successfully wrote 'keys.cfg'. You should probably go to ~/.poke/ and set up your ssh-keys!\n"
 		return True
 
 class KeyBase:
@@ -113,9 +113,6 @@ class UtilityFactory:
 				print("exception on %s!" % option)
 				dict1[option] = None
 		return dict1
-
-	def runNaNo(option, opt_str, value, parser):
-		call("nano %s/.poke/servers.cfg" % self.HOME, shell=True)
 
 	def getServerWithShorthand(shorty):
 		info = {}
