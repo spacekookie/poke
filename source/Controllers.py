@@ -38,14 +38,18 @@ class SessionController:
 		else:
 			self.passwd = True
 
-	def callServer(self):
+	def callServer(self, option, opt_str, value, parser):
 		print("You are now calling the server. Hurray!")
-		call("ssh " + self.user + "@" + self.server, shell=True)
+		# call("ssh " + self.user + "@" + self.server, shell=True)
 
-class KeyHostController:
+class CallbackController:
 
-	def __init__(self, key):
-		self.key = key
+	def __init__(self, home, wdir):
+		self.home = home
+		self.wdir = wdir
 
-	def useKey(self, key):
-		pass
+	def runVi(self, option, opt_str, value, parser):
+		call("vi " + self.home + "/" + self.wdir, shell=True)
+
+	def helpMe(self, option, opt_str, value, parser):
+		print("Something helpful here")

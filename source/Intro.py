@@ -91,7 +91,7 @@ class Setup:
 
 		# Checks if something was missing before. Otherwise shuts up
 		if self.sDir or self.sConf or self.sServ or self.sKeys:
-			print("Part of the application config was missing. Type 'poke -?' to edit it")
+			print("Part of the application config was missing. Type 'poke -?' to edit the configuration")
 			# exit()
 
 	def readConfig(self):
