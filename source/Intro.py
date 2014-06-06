@@ -4,6 +4,7 @@ from subprocess import call
 from os import path
 from sys import exit
 import time
+import platform
 from Strings import Strings
 
 class Setup:
@@ -49,6 +50,8 @@ class Setup:
 		keys = open(self.home + "/" + self.wDir + "/" + "keys.cfg", "wb+")
 		for line in self.strBase.keyHead:
 			keys.write("# " + line + "\n")
+		for line in self.strBase.keyBody:
+			keys.write(line + "\n")
 		keys.close()
 
 		self.sKeys = True
@@ -65,7 +68,7 @@ class Setup:
 		config.write("Init on: " + time.strftime("%c") + "\n")
 		config.write("$PATH:" + self.home + "\n")
 		config.write("$DIR:" + ".poke" + "\n")
-		config.write("$OS:" + "OSX" + "\n")
+		config.write("$OS:" + platform.system() + " " + platform.release() + "\n")
 		config.write("$VER:" + self.version + "\n")
 
 		config.close()
@@ -92,7 +95,7 @@ class Setup:
 		# Checks if something was missing before. Otherwise shuts up
 		if self.sDir or self.sConf or self.sServ or self.sKeys:
 			print("Part of the application config was missing. Type 'poke -?' to edit the configuration")
-			# exit()
+			exit()
 
 	def readConfig(self):
 		config = open('', 'r')

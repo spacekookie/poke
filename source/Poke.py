@@ -24,15 +24,15 @@ Found a bug? Report it in the repository issue tracker:
 
 '''
 
-from Controllers import SessionController
 from Controllers import CallbackController
-from IOHandle import Servers
+from IOHandle import Handle
 from ConfigParser import ConfigParser
 from optparse import OptionParser
 from optparse import OptionGroup
 from datetime import datetime
 from os import path
 from Intro import Setup
+from subprocess import call
 import Poke
 import sys
 
@@ -41,7 +41,7 @@ class Poke():
 
 	# Self variables
 	home = path.expanduser("~") # Change this to move Poke-location (not recomended)
-	version = "0.3.2"
+	version = "0.4.0"
 	workingDirectory = ".poke" # Change this to rename working directory
 	access = 1 # if 0 root is required to write and/or read ssh/ servers
 
@@ -56,14 +56,15 @@ class Poke():
 		cb = CallbackController(self.home, self.workingDirectory)
 
 		# Server config calls
-		serverIO = Servers()
+		serverIO = Handle(self.home)
 		self.serverCfg = ConfigParser()
 		self.serverCfg.read(self.home + "/" + self.workingDirectory + "/servers.cfg")
 		self.servers = self.serverCfg.sections() # Contains server sections
 
 		# Key config calls
-		# keyCfg = ConfigParser()
-		# keyCfg.read(self.home + "/" + self.workingDirectory + "/keys.cfg")
+		self.keyCfg = ConfigParser()
+		self.keyCfg.read(self.home + "/" + self.workingDirectory + "/keys.cfg")
+		self.keys = self.keyCfg.sections()
 
 		# Callbacks are handled automatically and need no further actions.
 		parser = OptionParser(version=self.version)
@@ -121,24 +122,40 @@ class Poke():
 			print(parser.format_help())
 			sys.exit()
 		else:
-			self.action()
+			# Checks if the configuration is empty
+			if self.con != {}:
+				self.action()
+			else:
+				print "You need to provide a server. Exiting..."
+				sys.exit()
 
 	def action(self):
-		# print self.prefs
-		'''if self.prefs.xterm:
-			self.useX = True
+		if self.prefs.xterm:
+			if self.con['xdef'] != self.prefs.xterm:
+				print "Overwriting XTerm..."
+			self.con['xdef'] = True
+
 		if self.prefs.SSH_KEY:
-			self.useKey = True
-			self.key = self.prefs.SSH_KEY
-			print(self.key)'''
+			if self.con['key'] != self.prefs.SSH_KEY:
+				print "Overwriting SSH Key..."
+			self.con['key'] = self.prefs.SSH_KEY
+
+		# Uses all the collected information to estabish SSH connection
+		self.finalize()
 
 
 	# Updates the global server stored in this class to connect to later!
 	def update(self, option, opt_str, value, parser):
 		t = str(option)
 		handle = t[1:2]
-		sCheck = Servers()
 
+		kCheck = Handle(self.home)
+		keyList = {}
+		for key in self.keys:
+			section = kCheck.getSectionMap(key, self.keyCfg)
+			keyList[section['id']] = section['path']
+
+		sCheck = Handle(self.home)
 		for server in self.servers:
 			section = sCheck.getSectionMap(server, self.serverCfg)
 			if section['shorthand'] == handle:
@@ -146,7 +163,8 @@ class Poke():
 				self.con['url'] = section['url']
 				self.con['user'] = section['user']
 				if 'key' in section:
-					self.con['key'] = section['key']
+					tmp = section['key']
+					self.con['key'] = sCheck.getGlobalURL(keyList[tmp])
 				else:
 					self.con['key'] = None
 
@@ -158,10 +176,18 @@ class Poke():
 				else:
 					self.con['xdef'] = False
 
-		print("###########")
-		print(self.con)
-		# call("ssh " + self.user + "@" + self.server, shell=True)
-
+	def finalize(self):
+		url = self.con['url']
+		usr = self.con['user']
+		if self.con['xdef']:
+			x = " -X "
+		else:
+			x = " "
+		
+		if self.con['key'] is None:
+			call("ssh " + usr + "@" + url + x, shell=True)
+		else:
+			call("ssh -i" + self.con['key'] + " " + usr + "@" + url + x, shell=True)
 
 	# Starts the application
 	if __name__ == "__main__":

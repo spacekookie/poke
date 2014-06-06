@@ -27,21 +27,6 @@ Found a bug? Report it in the repository issue tracker:
 import sys
 from subprocess import call
 
-class SessionController:
-
-	def __init__(self, server, user, key):
-		self.server = server
-		self.user = user
-		if key is not None:
-			self.key = key
-			self.passwd = False
-		else:
-			self.passwd = True
-
-	def callServer(self, option, opt_str, value, parser):
-		print("You are now calling the server. Hurray!")
-		# call("ssh " + self.user + "@" + self.server, shell=True)
-
 class CallbackController:
 
 	def __init__(self, home, wdir):
@@ -50,6 +35,8 @@ class CallbackController:
 
 	def runVi(self, option, opt_str, value, parser):
 		call("vi " + self.home + "/" + self.wdir, shell=True)
+		sys.exit()
 
 	def helpMe(self, option, opt_str, value, parser):
 		print("Something helpful here")
+		sys.exit()
