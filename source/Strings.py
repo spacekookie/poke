@@ -7,6 +7,6 @@ class Strings():
 
 		self.serverBody = ["[HomeServer]", "Name: Jane's NAS", "ShortHand: j", "LongHand: jane", "URL: 111.222.333.444", "User: Jane", "Key: default", "", "[Work Server]", "Name: Work Cluster", "ShortHand: w", "LongHand: work", "URL: workserver.kiwi", "User: employee1337", "XDef: True", "Key: work"]
 		self.keyHead = ["SSH Key config for Poke v%s by Katharina Sabel" % version, "Email katharina.sabel@2rsoftworks.de suggestions and comments","Visit support.2rsoftworks.de to report issues", "", "You can add your private SSH keys down below", "Each section needs to have an ID field, the path and access priority", "Note that you can enter any ID combination you want.", "Check the github wiki for more information"]
-		self.keyBody = ["[Key1]", "ID: standard", "ShortID: st", "Path: rsa_id", "Access: 3", "", "[Key2]", "ID: work-key", "ShortID: wk", "Path: work_id", "Access: 0"]
+		self.keyBody = ["[Key1]", "ID: default", "ShortID: def", "Path: id_rsa", "Access: 3", "", "[Key2]", "ID: work-key", "ShortID: wk", "Path: work_id", "Access: 0"]
 
 		self.globalHead = ["This file contains important information to run Poke", "Do not change anything unless you know what you're doing!", "In case of corruption remove this file to re-init"]

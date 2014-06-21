@@ -41,7 +41,7 @@ class Poke():
 
 	# Self variables
 	home = path.expanduser("~") # Change this to move Poke-location (not recomended)
-	version = "0.4.2"
+	version = "0.4.3"
 	workingDirectory = ".poke" # Change this to rename working directory
 	access = 1 # if 0 root is required to write and/or read ssh/ servers
 
@@ -97,7 +97,10 @@ class Poke():
 			user = section['user']
 
 			if 'xdef' in section:
-				xdef = "'True'"
+				if section['xdef'] == "True":
+					xdef = "'True'"
+				else:
+					xdef = "'False'"
 			else:
 				xdef = "'False'"
 
