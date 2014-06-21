@@ -41,7 +41,7 @@ class Poke():
 
 	# Self variables
 	home = path.expanduser("~") # Change this to move Poke-location (not recomended)
-	version = "0.4.1"
+	version = "0.4.2"
 	workingDirectory = ".poke" # Change this to rename working directory
 	access = 1 # if 0 root is required to write and/or read ssh/ servers
 
@@ -192,5 +192,6 @@ class Poke():
 	# Starts the application
 	if __name__ == "__main__":
 		startTime = datetime.now()
+		var = datetime.now()-startTime
 		Poke.Poke().main()
-		print(datetime.now()-startTime)
+		print("SSH connection was open for %s" % str(var))
