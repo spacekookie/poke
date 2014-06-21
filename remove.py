@@ -4,7 +4,7 @@ from datetime import datetime
 from subprocess import call
 from sys import exit
 
-print("This will remove poke from your /usr/sbin directory.")
+print("This will remove poke from your /usr/bin directory.")
 print("This will *not* remove your configuration files from ~/.poke")
 note = "Note you will have to execute this script with root privileges to install poke correctly. Continue? [Y/n]: "
 
@@ -21,6 +21,6 @@ else:
 	print "Invalid input. Canceling removal"
 	exit()
 
-call("sudo rm /usr/sbin/poke", shell=True)
+call("sudo rm /usr/bin/poke", shell=True)
 
 print("Removal complete.")
