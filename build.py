@@ -56,10 +56,10 @@ check = raw_input("Do you want me to link the '/usr/bin' to your path (if not al
 
 if check.lower() == "y" or check.lower() == "":
 	path = environ['PATH'].split(pathsep)
-		if not'/usr/bin' in path:
-			call("export PATH='$PATH:/usr/bin'", shell=True)
-		else:
-			print "/usr/bin/ is alrady linked in path. Omitting export..."	
+	if not'/usr/bin' in path:
+		call("export PATH='$PATH:/usr/bin'", shell=True)
+	else:
+		print "/usr/bin/ is alrady linked in path. Omitting export..."	
 else:
 	print "Not linking directory..."
 
