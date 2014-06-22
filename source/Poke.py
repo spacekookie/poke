@@ -27,8 +27,7 @@ Found a bug? Report it in the repository issue tracker:
 from Controllers import CallbackController
 from IOHandle import Handle
 from ConfigParser import ConfigParser
-from optparse import OptionParser
-from optparse import OptionGroup
+from optparse import OptionParser, SUPPRESS_HELP, OptionGroup
 from datetime import datetime
 from os import path
 from Intro import Setup
@@ -50,6 +49,8 @@ class Poke():
 		start = Setup(self.home, self.version, self.workingDirectory)
 		start.make()
 
+		# Checks if one of the two sub-modules was invoked.
+
 		# Future server to connect to!
 		self.con = {}
 
@@ -70,7 +71,7 @@ class Poke():
 		parser = OptionParser(version=self.version)
 		parser.remove_option("-h") # Remove default help from screen. TEMP WORKAROUND!
 
-		parser.add_option("-H", action="callback", help="Display usage information about this application", callback=cb.helpMe)
+		# parser.add_option("upgrade", action="callback", help=SUPPRESS_HELP, callback=cb.helpMe)
 		parser.add_option("-?", action="callback", help="Open 'Vi' to editor your config files!", callback=cb.runVi)
 
 		administrative = OptionGroup(parser, "Overwrite Settings")

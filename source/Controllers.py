@@ -24,8 +24,9 @@ Found a bug? Report it in the repository issue tracker:
 
 '''
 
-import sys
+from sys import exit
 from subprocess import call
+
 
 class CallbackController:
 
@@ -35,8 +36,48 @@ class CallbackController:
 
 	def runVi(self, option, opt_str, value, parser):
 		call("vi " + self.home + "/" + self.wdir, shell=True)
-		sys.exit()
+		exit()
 
 	def helpMe(self, option, opt_str, value, parser):
 		print("Something helpful here")
-		sys.exit()
+		exit()
+
+class PurgeController:
+
+	def __init__(self):
+		self.binary = False
+		self.source = False
+		self.config = False
+
+		print("!!! YOU ARE ABOUT TO PURGE POKE FROM YOUR SYSTEM !!!\n")
+		note = "Note you will have to execute this script with root privileges to remove Poke correctly. Continue? [Y/n]: "
+		usrInput = raw_input(note)
+
+		if usrInput.lower() == "n":
+			print("PURGE CANCELED")
+			exit()
+		elif usrInput.lower() == "y":
+			pass
+		elif usrInput.lower() == "":
+			pass
+		else:
+			print "Invalid input. PURGE CANCELED"
+			exit()
+
+		purgeBinary()
+
+		purgeSource()
+
+		purgeConfigs()
+
+
+
+	def purgeBinary(self):
+		pass
+
+	def purgeSource(self):
+		pass
+
+	def purgeConfigs(self):
+		pass
+

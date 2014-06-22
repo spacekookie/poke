@@ -31,7 +31,8 @@ from sys import exit
 from os import environ, pathsep
 
 startTime = datetime.now()
-print("Welcome to the Poke build script Version 0.1")
+
+print("This script will build Poke")
 print("This will compile poke and move the binary to your /usr/bin directory.")
 note = "Note you will have to execute this script with root privileges to install poke correctly. Continue? [Y/n]: "
 
