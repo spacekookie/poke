@@ -24,7 +24,7 @@ Found a bug? Report it in the repository issue tracker:
 
 '''
 
-from Controllers import CallbackController
+from Controllers import CallbackController, PurgeController
 from IOHandle import Handle
 from ConfigParser import ConfigParser
 from optparse import OptionParser, SUPPRESS_HELP, OptionGroup
@@ -45,6 +45,10 @@ class Poke():
 	access = 1 # if 0 root is required to write and/or read ssh/ servers
 
 	def main(self):
+
+		print "Opening purge controller"
+		p = PurgeController
+
 		# Creates a starter object to init default values. If already set these will be read from config
 		start = Setup(self.home, self.version, self.workingDirectory)
 		start.make()

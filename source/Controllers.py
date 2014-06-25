@@ -26,6 +26,7 @@ Found a bug? Report it in the repository issue tracker:
 
 from sys import exit
 from subprocess import call
+from Strings import Strings, CCodes
 
 
 class CallbackController:
@@ -45,9 +46,11 @@ class CallbackController:
 class PurgeController:
 
 	def __init__(self):
+		print "Hello???"
 		self.binary = False
 		self.source = False
 		self.config = False
+		self.cc = CCodes()
 
 		print("!!! YOU ARE ABOUT TO PURGE POKE FROM YOUR SYSTEM !!!\n")
 		note = "Note you will have to execute this script with root privileges to remove Poke correctly. Continue? [Y/n]: "
@@ -76,8 +79,19 @@ class PurgeController:
 		pass
 
 	def purgeSource(self):
-		pass
+		if path.isdir(self.home + "/usr/local/src/poke") is True:
+			call("rm -r /usr/local/src/poke", shell=True)
+		else:
+			msg = cc.WARNING + "!!!EXPERIMENTAL!!! source couldn't be found at '/usr/local/src/poke'. Did you install it somewhere else? Do you want me to to search for it? [y/N]: " + cc.ENDC
+			feedback = raw_input(msg) # Move message to Strings class
+
+			if feedback.lower() == "y":
+				print "This may take a while!"
+				call("find / | grep 'poke' >> .temp", shell=True)
+			else:
+				print "Not removing source from system."
 
 	def purgeConfigs(self):
-		pass
+		call("rm -r ~/.poke/", shell=True)
+		self.config = True
 
