@@ -10,6 +10,8 @@ class Strings():
 		self.keyBody = ["[Key1]", "ID: default", "ShortID: def", "Path: id_rsa", "Access: 3", "", "[Key2]", "ID: work-key", "ShortID: wk", "Path: work_id", "Access: 0"]
 
 		self.globalHead = ["This file contains important information to run Poke", "Do not change anything unless you know what you're doing!", "In case of corruption remove this file to re-init"]
+		
+		self.sourcePurgeWarn = "!!!EXPERIMENTAL!!! source couldn't be found at '/usr/local/src/poke'. Did you install it somewhere else? Do you want me to to search for it? [y/N]: "
 
 class CCodes():
 

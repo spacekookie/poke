@@ -25,7 +25,7 @@ Found a bug? Report it in the repository issue tracker:
 '''
 
 from sys import exit
-from subprocess import call
+from subprocess import call, Popen, PIPE
 from Strings import Strings, CCodes
 
 
@@ -51,6 +51,7 @@ class PurgeController:
 		self.source = False
 		self.config = False
 		self.cc = CCodes()
+		self.strings = Strings(None)
 
 		print("!!! YOU ARE ABOUT TO PURGE POKE FROM YOUR SYSTEM !!!\n")
 		note = "Note you will have to execute this script with root privileges to remove Poke correctly. Continue? [Y/n]: "
@@ -67,22 +68,44 @@ class PurgeController:
 			print "Invalid input. PURGE CANCELED"
 			exit()
 
-		purgeBinary()
+		askBin = raw_input("Remove binary from '/usr/bin'? [Y/n]: ").lower()
+		if askBin == "y" or askBin == "":
+			purgeBinary()
+		
+		askSource = raw_input("Remove source files from '/usr/local/src'? [Y/n]: ").lower()
+		if askSource == "y" or askSource == "":
+			purgeSource()
+		
+		askConf = raw_input("Remove configuration files from '~/.poke'? [Y/n]: ").lower()
+		if askConf == "y" or askConf == "":
+			purgeConfigs()
 
-		purgeSource()
-
-		purgeConfigs()
-
-
+		if self.source and self.binary and self.config:
+			print("Poke is now no longer installed on your system. I hope you're happy... :(")
+		elif self.binary and self.source:
+			print("Poke binary and source are no longer on your machine. Config files are still present under ~/.poke")
+		elif self.binary and self.config:
+			print("Poke binary and config are no longer on your machine. But you can always recompile the tool from source at /usr/local/src/poke")
+		else:
+			print "Poke is still installed."
+		print "Either way: Terminating!"
+		exit()
 
 	def purgeBinary(self):
-		pass
+		pipe = Popen(['which', 'poke'], stdout=PIPE, stdin=PIPE)
+		text = pipe.communicate()[0]
+		if not text:
+			print "Poke binary couldn't be found on this system!"
+			pass
+
+		call("sudo rm %s" % text, shell=True)
+		binary = True
 
 	def purgeSource(self):
 		if path.isdir(self.home + "/usr/local/src/poke") is True:
 			call("rm -r /usr/local/src/poke", shell=True)
 		else:
-			msg = cc.WARNING + "!!!EXPERIMENTAL!!! source couldn't be found at '/usr/local/src/poke'. Did you install it somewhere else? Do you want me to to search for it? [y/N]: " + cc.ENDC
+			msg = cc.WARNING + strings.purgeSourceWarn + cc.ENDC
 			feedback = raw_input(msg) # Move message to Strings class
 
 			if feedback.lower() == "y":
