@@ -24,51 +24,72 @@ Found a bug? Report it in the repository issue tracker:
 
 '''
 
-from Controllers import CallbackController, PurgeController
-from IOHandle import Handle
-from ConfigParser import ConfigParser
+from Controllers import CallbackController, PurgeController, UpgradeController
 from optparse import OptionParser, SUPPRESS_HELP, OptionGroup
+from ConfigParser import ConfigParser
 from datetime import datetime
-from os import path
-from Intro import Setup
 from subprocess import call
-import Poke
-import sys
+from IOHandle import Handle
+from sys import exit, argv
+from Strings import CCodes
+from Intro import Setup
+from os import path
 
 # This is the main application file and entry point for the Poke commandline tool.
 class Poke():
 
 	# Self variables
 	home = path.expanduser("~") # Change this to move Poke-location (not recomended)
-	version = "0.4.3"
+	version = "0.4.4"
 	workingDirectory = ".poke" # Change this to rename working directory
 	access = 1 # if 0 root is required to write and/or read ssh/ servers
 
 	def main(self):
+		cb = CallbackController(self.home, self.workingDirectory)
+		self.cc = CCodes()
+		self.hadErrors = False
 
-		print "Opening purge controller"
-		p = PurgeController
+		# Checks if one of the two sub-modules was invoked.
+		if len(argv) > 1:
+			if argv[1] == "purge":
+				p = PurgeController() #Ends sessions!!!
+			elif argv[1] == "upgrade":
+				if len(argv) == 3:
+					if argv[2] == "-u":
+						print self.cc.WARNING + "==> Using unstable version!" + self.cc.ENDC
+				u = UpgradeController() #ENDS THE SESSIONS!!!
+				exit()
 
+			#TODO: Get rid of this override. This should only be handled via the OptionsParser.
+			# You shouldn't write your own little side-ways into certain parts of the application!
+			elif argv[1] == "-?":
+				cb.runVi(None, None, None, None)
+
+		# If it went through the custom actions it will initiate itself!
 		# Creates a starter object to init default values. If already set these will be read from config
 		start = Setup(self.home, self.version, self.workingDirectory)
 		start.make()
 
-		# Checks if one of the two sub-modules was invoked.
-
 		# Future server to connect to!
 		self.con = {}
-
-		cb = CallbackController(self.home, self.workingDirectory)
 
 		# Server config calls
 		serverIO = Handle(self.home)
 		self.serverCfg = ConfigParser()
-		self.serverCfg.read(self.home + "/" + self.workingDirectory + "/servers.cfg")
+		try:
+			self.serverCfg.read(self.home + "/" + self.workingDirectory + "/servers.cfg")
+		except Exception:
+			print self.cc.FAIL + "MALFORMED KEY CONFIGURATION: MISSING KEY HEADER!" + self.cc.ENDC
+			self.hadErrors = True
 		self.servers = self.serverCfg.sections() # Contains server sections
 
 		# Key config calls
 		self.keyCfg = ConfigParser()
-		self.keyCfg.read(self.home + "/" + self.workingDirectory + "/keys.cfg")
+		try:
+			self.keyCfg.read(self.home + "/" + self.workingDirectory + "/keys.cfg")
+		except Exception:
+			print self.cc.FAIL + "MALFORMED KEY CONFIGURATION: MISSING KEY HEADER!" + self.cc.ENDC
+			self.hadErrors = True
 		self.keys = self.keyCfg.sections()
 
 		# Callbacks are handled automatically and need no further actions.
@@ -84,58 +105,69 @@ class Poke():
 		parser.add_option_group(administrative)
 		
 		serverGroup = OptionGroup(parser, "Your servers")
-		for server in self.servers:
-			section = serverIO.getSectionMap(server, self.serverCfg)
+		try:
+			for server in self.servers:
+				section = serverIO.getSectionMap(server, self.serverCfg)
 
-			if 'name' in section:
-				name = section['name']
-			else:
-				name = ""
+				if 'name' in section:
+					name = section['name']
+				else:
+					name = ""
 
-			sHand = section['shorthand']
+				sHand = section['shorthand']
 
-			if 'longhand' in section:
-				lHand = section['longhand']
-			else:
-				lHand = ""
-			url = section['url']
-			user = section['user']
+				if 'longhand' in section:
+					lHand = section['longhand']
+				else:
+					lHand = ""
+				url = section['url']
+				user = section['user']
 
-			if 'xdef' in section:
-				if section['xdef'] == "True":
-					xdef = "'True'"
+				if 'xdef' in section:
+					if section['xdef'] == "True":
+						xdef = "'True'"
+					else:
+						xdef = "'False'"
 				else:
 					xdef = "'False'"
-			else:
-				xdef = "'False'"
 
-			if 'key' in section:
-				key = section['key']
-			else:
-				key = None
+				if 'key' in section:
+					key = section['key']
+				else:
+					key = None
 
-			serverID = name + (":[%s@%s]" % (user, url))
-			if key is not None:
-				helpText = "Connect to %s with key '%s'. XTerm is %s by default" % (serverID, key, xdef)
-			else:
-				helpText = "Connect to %s. XTerm is %s by default" % (serverID, xdef)
-			serverGroup.add_option("-%s" % sHand, "--%s" % lHand, action="callback", help=helpText, callback=self.update)
+				serverID = name + (":[%s@%s]" % (user, url))
+				if key is not None:
+					helpText = "Connect to %s with key '%s'. XTerm is %s by default" % (serverID, key, xdef)
+				else:
+					helpText = "Connect to %s. XTerm is %s by default" % (serverID, xdef)
+				serverGroup.add_option("-%s" % sHand, "--%s" % lHand, action="callback", help=helpText, callback=self.update)
 
-			# action="store", type="string", dest="filename" 
+				# action="store", type="string", dest="filename" 
+		except Exception:
+			print self.cc.FAIL + "MALFORMED SERVER CONFIGURATION!" + self.cc.ENDC
+			self.hadErrors = True
 
 		parser.add_option_group(serverGroup)
 		(self.prefs, self.args) = parser.parse_args()
 
-		if len(sys.argv) == 1:
-			print(parser.format_help())
-			sys.exit()
+		# Displays the Poke help-text and added extra items for purge and upgrade. Will not display if {self.hadErrors = True}
+		if len(argv) == 1:
+			if not self.hadErrors:
+				print(parser.format_help())
+				print("\tpurge\tDeletes Poke from your system")
+				print("\tupgrade\tChecks if there are new stable releases of Poke")
+				print("\t\t -u\tAlso includes unstable releases in upgrade search (Not recomended)")
+			else:
+				print(self.cc.WARNING + "THE APPLICATION ENCOUNTERED FATAL ERRORS. FIX THEM. TERMINATING NOW!" + self.cc.ENDC)
+			exit()
 		else:
 			# Checks if the configuration is empty
 			if self.con != {}:
 				self.action()
 			else:
 				print "You need to provide a server. Exiting..."
-				sys.exit()
+				exit()
 
 	def action(self):
 		if self.prefs.xterm:
@@ -159,9 +191,13 @@ class Poke():
 
 		kCheck = Handle(self.home)
 		keyList = {}
-		for key in self.keys:
-			section = kCheck.getSectionMap(key, self.keyCfg)
-			keyList[section['id']] = section['path']
+		try:
+			for key in self.keys:
+				section = kCheck.getSectionMap(key, self.keyCfg)
+				keyList[section['id']] = section['path']
+		except Exception:
+			print(self.cc.WARNING + "MALFORMED KEY FILE!" + self.cc.ENDC)
+			exit()
 
 		sCheck = Handle(self.home)
 		for server in self.servers:
@@ -197,9 +233,12 @@ class Poke():
 		else:
 			call("ssh -i" + self.con['key'] + " " + usr + "@" + url + x, shell=True)
 
-	# Starts the application
-	if __name__ == "__main__":
-		startTime = datetime.now()
-		var = datetime.now()-startTime
-		Poke.Poke().main()
-		print("SSH connection was open for %s" % str(var))
+# Starts the application
+if __name__ == "__main__":
+	startTime = datetime.now()
+	var = datetime.now()-startTime
+	try:
+		Poke().main()
+	except KeyboardInterrupt:
+		exit()
+	print("\033[92m==> SSH connection was open for %s \033[0m" % str(var))

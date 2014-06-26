@@ -22,8 +22,8 @@ Found a bug? Report it in the repository issue tracker:
 
 		https://github.com/SpaceKookie/Poke
 
-'''
-
+''' 
+from os import geteuid, path
 from sys import exit
 from subprocess import call, Popen, PIPE
 from Strings import Strings, CCodes
@@ -46,19 +46,18 @@ class CallbackController:
 class PurgeController:
 
 	def __init__(self):
-		print "Hello???"
 		self.binary = False
 		self.source = False
 		self.config = False
 		self.cc = CCodes()
 		self.strings = Strings(None)
 
-		print("!!! YOU ARE ABOUT TO PURGE POKE FROM YOUR SYSTEM !!!\n")
+		print(self.cc.WARNING + "==> YOU ARE ABOUT TO PURGE POKE FROM YOUR SYSTEM !!!\n" + self.cc.ENDC)
 		note = "Note you will have to execute this script with root privileges to remove Poke correctly. Continue? [Y/n]: "
 		usrInput = raw_input(note)
 
 		if usrInput.lower() == "n":
-			print("PURGE CANCELED")
+			print(self.cc.OKGREEN + "==> PURGE CANCELED" + self.cc.ENDC)
 			exit()
 		elif usrInput.lower() == "y":
 			pass
@@ -68,26 +67,30 @@ class PurgeController:
 			print "Invalid input. PURGE CANCELED"
 			exit()
 
+		if not geteuid()==0:
+			print "Not running with root privileges. Trying to elevate via 'sudo'."
+			call("sudo echo 'SUCCESS!'", shell=True)
+
 		askBin = raw_input("Remove binary from '/usr/bin'? [Y/n]: ").lower()
 		if askBin == "y" or askBin == "":
-			purgeBinary()
+			self.purgeBinary()
 		
 		askSource = raw_input("Remove source files from '/usr/local/src'? [Y/n]: ").lower()
 		if askSource == "y" or askSource == "":
-			purgeSource()
+			self.purgeSource()
 		
 		askConf = raw_input("Remove configuration files from '~/.poke'? [Y/n]: ").lower()
 		if askConf == "y" or askConf == "":
-			purgeConfigs()
+			self.purgeConfigs()
 
 		if self.source and self.binary and self.config:
-			print("Poke is now no longer installed on your system. I hope you're happy... :(")
+			print("==> Poke is now no longer installed on your system. I hope you're happy... :(")
 		elif self.binary and self.source:
-			print("Poke binary and source are no longer on your machine. Config files are still present under ~/.poke")
+			print("==> Poke binary and source are no longer on your machine. Config files are still present under ~/.poke")
 		elif self.binary and self.config:
-			print("Poke binary and config are no longer on your machine. But you can always recompile the tool from source at /usr/local/src/poke")
+			print("==> Poke binary and config are no longer on your machine. But you can always recompile the tool from source at /usr/local/src/poke")
 		else:
-			print "Poke is still installed."
+			print "==> Poke is still installed."
 		print "Either way: Terminating!"
 		exit()
 
@@ -118,3 +121,8 @@ class PurgeController:
 		call("rm -r ~/.poke/", shell=True)
 		self.config = True
 
+class UpgradeController:
+
+	def __init__(self):
+		print "This feature is currently not (yet) implemented!"
+		pass
