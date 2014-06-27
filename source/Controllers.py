@@ -169,7 +169,7 @@ class UpgradeController:
 		    sys.stdout.flush()
 		sys.stdout.write("\n")
 
-		if dates[0] >= self.info['date']:
+		if dates[0] <= self.info['date']:
 			print(self.cc.OKGREEN + "==> You're already running the latest version of Poke." + self.cc.ENDC)
 			print("Terminating...")
 			exit()
@@ -182,9 +182,10 @@ class UpgradeController:
 							name = asset['name']
 							if name.endswith('tar.bz2'):
 								url = self.skel + "stable" + name
+								print name
 								self.info['url'] = url
 
-		self.update(self.info['url'])
+		self.upgrade(self.info['url'], "",False)
 
 	# Compares two dates and returns the newer (larger) one
 	def compareDates(self, a, b):
@@ -220,9 +221,11 @@ class UpgradeController:
 	def getLatestUnstable(self, versions):
 		pass
 
-	def upgrade(self, url, unstable):
+	def upgrade(self, url, target, unstable):
 		if unstable:
 			print("Downloading latest unstable version. You have been warned.")
+
+		blob = raw_input("New version available. Would you like to upgrade now? [Y/n]: ")
 
 		call("sudo cd ~/.poke", shell=True)
 		print("Opening stream to www.github.com")
