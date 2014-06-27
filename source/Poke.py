@@ -33,16 +33,20 @@ from IOHandle import Handle
 from sys import exit, argv
 from Strings import CCodes
 from Intro import Setup
-from os import path
+from os import path, popen
+import textwrap
 
 # This is the main application file and entry point for the Poke commandline tool.
 class Poke():
 
 	# Self variables
 	home = path.expanduser("~") # Change this to move Poke-location (not recomended)
-	version = "0.4.4"
+	version = "0.4.5"
 	workingDirectory = ".poke" # Change this to rename working directory
 	access = 1 # if 0 root is required to write and/or read ssh/ servers
+
+	rows, columns = popen('stty size', 'r').read().split()
+	cwidth = int(float(columns))
 
 	def main(self):
 		cb = CallbackController(self.home, self.workingDirectory)
@@ -155,9 +159,13 @@ class Poke():
 		if len(argv) == 1:
 			if not self.hadErrors:
 				print(parser.format_help())
-				print("\tpurge\tDeletes Poke from your system")
-				print("\tupgrade\tChecks if there are new stable releases of Poke")
-				print("\t\t -u\tAlso includes unstable releases in upgrade search (Not recomended)")
+				print("Other commands:")
+				print("  purge\t\tDeletes Poke from your system")
+				print("  upgrade\tChecks if there are new stable releases of Poke")
+				print("\t-u\tAlso includes unstable releases in upgrade search")
+				# wrapped = textwrap.wrap(upgradeMsg, width=self.cwidth)
+				#for passage in wrapped:
+				#print(upgradeMsg)
 			else:
 				print(self.cc.WARNING + "THE APPLICATION ENCOUNTERED FATAL ERRORS. FIX THEM. TERMINATING NOW!" + self.cc.ENDC)
 			exit()
@@ -240,5 +248,6 @@ if __name__ == "__main__":
 	try:
 		Poke().main()
 	except KeyboardInterrupt:
+		print("\n\033[93mTriggered KeyboardInterrupt!\033[0m")
 		exit()
 	print("\033[92m==> SSH connection was open for %s \033[0m" % str(var))
