@@ -3,9 +3,24 @@ This is an SSH command-line utility tool designed to connect you to various ssh 
 
 Instead of having to type server connections over and over or use 10 different aliases to do 10 different things you can now use Poke to set up as many SSH connections as you want and use them all with just one command.
 
+## How to install
+You have two options when it comes to installing. You can either stick to one of the snapshop releases that are thoroughly tested and shouldn't contain any bugs. Click on the "releases" tab and download the latest one. In this case you will have to compile the binary file yourself. After downloading and un-tarring the archive with ```tar -xjf poke-x.y.z.tar.bz2``` you run ```./make``` and then ```./make install``` in the 'Poke' directory that was created from the tarball.
+
+Alternatively you can head over to <a href="http://sourceforge.net/projects/poke-ssh-manager/">sourceforge</a> and download one of the pre-compiled binaries. They are however not even remotely as often updated as the source snapshots and will thus be more developed.
+
+ALTERNATIVELY if you want to help me develop Poke or you're just very masochistic you can download a non-stable snapshot. Non-stable snapshots are mid-release cycle and under heavy development. They will contains bugs and errors. Use at your own disgression. Feedback from those versions can however be very useful to me.
+
+## How to use
+After installing poke to your system you can type ```poke``` to list all configured servers (more to that below). Then simply connect to one of the servers by using it's short OR longhandle as a parameter e.g. ```poke --work``` or ``poke -p```.
+There are several settings that can be overwritten including the default SSH-Key that will be used for a session and the XTerm configuration for a session.
+
++ ```poke --work -K default``` will connect to the 'work' server using the 'default' key from the keys.cfg file.
++ ```poke --jane -X``` will connect to the 'jane' server overwriting the XTerm setting to "true" from whatever it was before. You will be notified if it actually changed.
+
+## How to set up
 When running Poke for the first time the tool will create a few configuration files at ```~/.poke/```. One is a global configuration file that contains the config and user path as well as version and OS information.
 
-In addition to that two more configuration files are created. One called ```~/.poke/servers.cfg*``` and the other called ```~/.poke/keys.cfg```.
+In addition to that two more configuration files are created. One called ```~/.poke/servers.cfg*``` and the other called ```~/.poke/keys.cfg```
 
 The server configuration uses a standard configuration layout:
 
@@ -34,6 +49,6 @@ The key configuration file acts as follows:
 
 For more examples on how to configure your keys check the ```samples/keys.cfg```file
 
-**Note: You need to have ssh installed for poke to work**.
+
 
 If you have issues using Poke check the Issue Tracker on this repository. If none exists already, please create one so I can get back to you.
