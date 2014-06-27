@@ -6,7 +6,7 @@ Instead of having to type server connections over and over or use 10 different a
 ## How to install
 You have two options when it comes to installing. You can either stick to one of the snapshop releases that are thoroughly tested and shouldn't contain any bugs. Click on the "releases" tab and download the latest one. In this case you will have to compile the binary file yourself. After downloading and un-tarring the archive with ```tar -xjf poke-x.y.z.tar.bz2``` you run ```./make``` and then ```./make install``` in the 'Poke' directory that was created from the tarball.
 
-Alternatively you can head over to <a href="http://sourceforge.net/projects/poke-ssh-manager/">sourceforge</a> and download one of the pre-compiled binaries. They are however not even remotely as often updated as the source snapshots and will thus be more developed.
+Alternatively you can head over to <a href="http://sourceforge.net/projects/poke-ssh-manager/">sourceforge</a> or look under the release section on this repository and download one of the pre-compiled binaries. They are however not even remotely as often updated as the source snapshots and will thus be more developed.
 
 ALTERNATIVELY if you want to help me develop Poke or you're just very masochistic you can download a non-stable snapshot. Non-stable snapshots are mid-release cycle and under heavy development. They will contains bugs and errors. Use at your own disgression. Feedback from those versions can however be very useful to me.
 
