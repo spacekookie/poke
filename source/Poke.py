@@ -56,14 +56,15 @@ class Poke():
 		# Checks if one of the two sub-modules was invoked.
 		if len(argv) > 1:
 			if argv[1] == "purge":
-				p = PurgeController() #Ends sessions!!!
+				p = PurgeController(self.home) #Ends session
 			elif argv[1] == "upgrade":
-				if len(argv) == 3:
-					if argv[2] == "-u":
-						print self.cc.WARNING + "==> Using unstable version!" + self.cc.ENDC
-				u = UpgradeController() #ENDS THE SESSIONS!!!
-				exit()
-
+				u = UpgradeController() #Ends session
+			elif argv[1] == "upgrade-unstable":
+				ret = raw_input(self.cc.WARNING + "==> Using unstable versions! Are you sure about that? [y/N]: " + self.cc.ENDC)
+				if ret.lower() == "y":
+					u = UpgradeController() #Ends session
+				else:
+					exit()
 			#TODO: Get rid of this override. This should only be handled via the OptionsParser.
 			# You shouldn't write your own little side-ways into certain parts of the application!
 			elif argv[1] == "-?":
@@ -160,9 +161,9 @@ class Poke():
 			if not self.hadErrors:
 				print(parser.format_help())
 				print("Other commands:")
-				print("  purge\t\tDeletes Poke from your system")
-				print("  upgrade\tChecks if there are new stable releases of Poke")
-				print("\t-u\tAlso includes unstable releases in upgrade search")
+				print("  purge\t\t\tDeletes Poke from your system")
+				print("  upgrade\t\tChecks if there are new stable releases of Poke")
+				print("  upgrade-unstable\tAlso includes unstable releases in upgrade search")
 				# wrapped = textwrap.wrap(upgradeMsg, width=self.cwidth)
 				#for passage in wrapped:
 				#print(upgradeMsg)

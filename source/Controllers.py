@@ -45,15 +45,16 @@ class CallbackController:
 
 class PurgeController:
 
-	def __init__(self):
+	def __init__(self, home):
 		self.binary = False
 		self.source = False
 		self.config = False
 		self.cc = CCodes()
 		self.strings = Strings(None)
+		self.home = home
 
 		print(self.cc.WARNING + "==> YOU ARE ABOUT TO PURGE POKE FROM YOUR SYSTEM !!!\n" + self.cc.ENDC)
-		note = "Note you will have to execute this script with root privileges to remove Poke correctly. Continue? [Y/n]: "
+		note = "I will need root privileges to remove Poke correctly. Continue? [Y/n]: "
 		usrInput = raw_input(note)
 
 		if usrInput.lower() == "n":
@@ -64,31 +65,31 @@ class PurgeController:
 		elif usrInput.lower() == "":
 			pass
 		else:
-			print "Invalid input. PURGE CANCELED"
+			print(self.cc.OKGREEN + "Invalid input. PURGE CANCELED" + self.cc.ENDC)
 			exit()
 
 		if not geteuid()==0:
-			print "Not running with root privileges. Trying to elevate via 'sudo'."
-			call("sudo echo 'SUCCESS!'", shell=True)
+			print "==> Not running with root privileges. Trying to elevate via 'sudo'."
+			call("sudo echo '\033[92mSUCCESS!\033[0m'", shell=True)
 
 		askBin = raw_input("Remove binary from '/usr/bin'? [Y/n]: ").lower()
-		if askBin == "y" or askBin == "":
+		if askBin.lower() == "y" or askBin.lower() == "":
 			self.purgeBinary()
 		
 		askSource = raw_input("Remove source files from '/usr/local/src'? [Y/n]: ").lower()
-		if askSource == "y" or askSource == "":
+		if askSource.lower() == "y" or askSource.lower() == "":
 			self.purgeSource()
 		
 		askConf = raw_input("Remove configuration files from '~/.poke'? [Y/n]: ").lower()
-		if askConf == "y" or askConf == "":
+		if askConf.lower() == "y" or askConf.lower() == "":
 			self.purgeConfigs()
 
 		if self.source and self.binary and self.config:
-			print("==> Poke is now no longer installed on your system. I hope you're happy... :(")
+			print(self.cc.HEADER + "==> Poke is now no longer installed on your system. I hope you're happy... :(" + self.cc.ENDC)
 		elif self.binary and self.source:
-			print("==> Poke binary and source are no longer on your machine. Config files are still present under ~/.poke")
+			print(self.cc.HEADER + "==> Poke binary and source are no longer on your machine. Config files are still present under ~/.poke" + self.cc.ENDC)
 		elif self.binary and self.config:
-			print("==> Poke binary and config are no longer on your machine. But you can always recompile the tool from source at /usr/local/src/poke")
+			print(self.cc.HEADER + "==> Poke binary and config are no longer on your machine. But you can always recompile the tool from source at /usr/local/src/poke" + self.cc.ENDC)
 		else:
 			print "==> Poke is still installed."
 		print "Either way: Terminating!"
@@ -98,31 +99,30 @@ class PurgeController:
 		pipe = Popen(['which', 'poke'], stdout=PIPE, stdin=PIPE)
 		text = pipe.communicate()[0]
 		if not text:
-			print "Poke binary couldn't be found on this system!"
-			pass
-
-		call("sudo rm %s" % text, shell=True)
-		binary = True
+			print("Poke binary couldn't be found on this system!")
+		else:
+			call("sudo rm %s" % text, shell=True)
+			print(self.cc.OKGREEN + "SUCCESS!" + self.cc.ENDC)
+			self.binary = True
 
 	def purgeSource(self):
-		if path.isdir(self.home + "/usr/local/src/poke") is True:
-			call("rm -r /usr/local/src/poke", shell=True)
+		if path.isdir("/usr/local/src/poke") is True:
+			call("sudo rm -r /usr/local/src/poke", shell=True)
+			print(self.cc.OKGREEN + "SUCCESS!" + self.cc.ENDC)
+			self.source = True
 		else:
-			msg = cc.WARNING + strings.purgeSourceWarn + cc.ENDC
-			feedback = raw_input(msg) # Move message to Strings class
-
-			if feedback.lower() == "y":
-				print "This may take a while!"
-				call("find / | grep 'poke' >> .temp", shell=True)
-			else:
-				print "Not removing source from system."
+			print(self.cc.WARNING + "Source files weren't found at expected location. Do they even exist?" + self.cc.ENDC)
 
 	def purgeConfigs(self):
-		call("rm -r ~/.poke/", shell=True)
-		self.config = True
+		if path.isdir(self.home + "/.poke"):
+			call("rm -r ~/.poke/", shell=True)
+			print(self.cc.OKGREEN + "SUCCESS!" + self.cc.ENDC)
+			self.config = True
+		else:
+			print(self.cc.WARNING + "I couldn't find any configs!" + self.cc.ENDC)
 
 class UpgradeController:
 
 	def __init__(self):
 		print "This feature is currently not (yet) implemented!"
-		pass
+		exit()
