@@ -41,7 +41,7 @@ class Poke():
 
 	# Self variables
 	home = path.expanduser("~") # Change this to move Poke-location (not recomended)
-	version = "0.4.5"
+	version = "0.4.6"
 	workingDirectory = ".poke" # Change this to rename working directory
 	access = 1 # if 0 root is required to write and/or read ssh/ servers
 
@@ -58,11 +58,11 @@ class Poke():
 			if argv[1] == "purge":
 				p = PurgeController(self.home) #Ends session
 			elif argv[1] == "upgrade":
-				u = UpgradeController() #Ends session
+				u = UpgradeController(False, self.version) #Ends session
 			elif argv[1] == "upgrade-unstable":
 				ret = raw_input(self.cc.WARNING + "==> Using unstable versions! Are you sure about that? [y/N]: " + self.cc.ENDC)
 				if ret.lower() == "y":
-					u = UpgradeController() #Ends session
+					u = UpgradeController(True, self.version) #Ends session
 				else:
 					exit()
 			#TODO: Get rid of this override. This should only be handled via the OptionsParser.
