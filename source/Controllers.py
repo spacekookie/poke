@@ -26,7 +26,7 @@ Found a bug? Report it in the repository issue tracker:
 from subprocess import Popen, PIPE, call, check_call, CalledProcessError
 from os import environ, pathsep, path, geteuid, popen
 from Strings import Strings, CCodes
-from sys import exit,stdout
+from sys import exit, stdout, argv
 from textwrap import wrap
 import urllib2
 import json
@@ -133,11 +133,12 @@ class PurgeController:
 class UpgradeController:
 	url = 'https://api.github.com/repos/SpaceKookie/Poke/releases'
 	skel = 'https://github.com/SpaceKookie/Poke/releases/download/'
+	uskel = 'https://github.com/SpaceKookie/Poke/releases/download/'
 
 	def __init__(self, unstable, version):
+		self.forceLatest = False
 		if unstable:
-			print("This feature is currently still not implemented. Please only upgrade to stable versions!")
-			exit()
+			print("Trying to determine if there are new unstable versions to patch to!")
 
 		# Init the CCodes class (again)
 		self.cc = CCodes()
@@ -147,6 +148,13 @@ class UpgradeController:
 		if not geteuid()==0:
 			print "==> Not running with root privileges. Trying to elevate via 'sudo'."
 			call("sudo echo '%sSUCCESS!%s'" % (self.cc.OKGREEN, self.cc.ENDC), shell=True)
+
+		if len(argv) == 3:
+			if argv[1] == "upgrade":
+				if argv[2] == "-f":
+					self.forceLatest = True
+			else:
+				print(self.cc.WARNING + "Force upgrade only works for stable releases!" + self.cc.ENDC)
 
 		print("Opening stream to www.github.com")
 		req = urllib2.Request(self.url)
@@ -174,25 +182,41 @@ class UpgradeController:
 		    stdout.flush()
 		stdout.write("\n")
 
-		if self.info['date'] == -1:
-			print("I can't verify what version you're running :( It doesn't show up on the Github releases!")
-			print(self.cc.WARNING + "==> Best thing to do is just to download the latest stable release manually!" + self.cc.ENDC)
-			exit()
+		if not unstable:
+			if self.info['date'] == -1:
+				if not self.forceLatest:
+					print("I can't verify what version you're running :( It doesn't show up on the Github releases!")
+					print(self.cc.WARNING + "==> Best thing to do is just to download the latest stable release manually or run 'poke upgrade -f'" + self.cc.ENDC)
+					exit()
 
 		if dates[0] <= self.info['date']:
 			print(self.cc.OKGREEN + "==> You're already running the latest version of Poke." + self.cc.ENDC)
 			print("Terminating...")
 			exit()
+
+		if not unstable:
+			for item in jdata:
+				if item['tag_name'] == 'stable':
+					assets = item['assets']
+					for asset in assets:
+						name = asset['name']
+						if name.endswith('tar.bz2'):
+							url = self.skel + "stable/" + name
+							self.info['url'] = url
 		else:
-			if not unstable:
-				for item in jdata:
-					if item['tag_name'] == 'stable':
-						assets = item['assets']
-						for asset in assets:
-							name = asset['name']
-							if name.endswith('tar.bz2'):
-								url = self.skel + "stable/" + name
-								self.info['url'] = url
+			betas = []
+			for item in jdata:
+				if self.isVersion(item['tag_name']):
+					betas.append(item['tag_name'])
+
+			if self.compareVersionsBools(betas[0], self.version):
+				print(self.cc.WARNING + "Currently running version is outdated by an unstable package..." + self.cc.ENDC)
+				name = betas[0]
+				url = self.uskel + name + "/poke-" + name + ".tar.bz2"
+				self.info['url'] = url
+			else:
+				print "==> No new unstable releases!"
+				exit()
 
 		self.upgrade(self.info['url'], name[5:10], False)
 		exit()
@@ -203,6 +227,32 @@ class UpgradeController:
 			return a
 		else:
 			return b
+
+	def isVersion(self, string):
+		# Returns 'True' if string is a version string
+		if len(string) == 5: 
+			if string[1] == "." and string[3] == ".": return True
+		return False
+
+	# Takes to x.y.z formatted version strings and returns IF THE FIRST ONE IS BIGGER!
+	def compareVersionsBools(self, a, b):
+		# The most comprehensive string names in the history of string names
+		aMa = a[0:1]
+		aMi = a[2:3]
+		aPa = a[4:5]
+		
+		bMa = b[0:1]
+		bMi = b[2:3]
+		bPa = b[4:5]
+
+		if aMa > bMa:
+			return True
+		elif aMa == bMa:
+			if aMi > bMi:
+				return True
+			elif aPa > bPa:
+				return True
+		return False
 
 	# Takes to x.y.z formatted version strings and returns the bigger one!
 	def compareVersions(self, a, b):
@@ -257,9 +307,6 @@ class UpgradeController:
 		pass
 
 	def upgrade(self, url, target, unstable):
-		if unstable:
-			print("Downloading latest unstable version. You have been warned.")
-
 		mst = "New version available. Would you like to upgrade to version %s now? [Y/n]: " % target
 		blob = raw_input(mst)
 		if blob.lower() == "n":
