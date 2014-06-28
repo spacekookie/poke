@@ -377,6 +377,7 @@ class UpgradeController:
 
 		print("==> Cleaning up")
 		call("rm -r %stmp/pyinstall %stmp/pyinstall.tar.gz  %stmp/dist/ %stmp/build/ %stmp/poke.spec %stmp/source/*.pyc" % (w, w, w, w, w, w), shell=True)
+		call("sudo rm %s/poke.tar.bz2" % w, shell=True)
 
 		if path.isdir('/usr/local/src/poke'):
 			print("==> Moving new source files")
@@ -385,21 +386,3 @@ class UpgradeController:
 
 		print(self.cc.OKGREEN + "==> Patcher shutting down. Run 'poke --version' to verify result!" + self.cc.ENDC)
 		return
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
