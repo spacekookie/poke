@@ -23,14 +23,14 @@ Found a bug? Report it in the repository issue tracker:
 		https://github.com/SpaceKookie/Poke
 
 ''' 
-from subprocess import call, Popen, PIPE
+from subprocess import Popen, PIPE, call, check_call, CalledProcessError
+from os import environ, pathsep, path, geteuid, popen
 from Strings import Strings, CCodes
-from os import geteuid, path
-from sys import exit
+from sys import exit,stdout
+from textwrap import wrap
 import urllib2
 import json
 import time
-import sys
 
 
 class CallbackController:
@@ -127,7 +127,7 @@ class PurgeController:
 
 class UpgradeController:
 	url = 'https://api.github.com/repos/SpaceKookie/Poke/releases'
-	skel = 'https://github.com/SpaceKookie/Poke/releases/'
+	skel = 'https://github.com/SpaceKookie/Poke/releases/download/'
 
 	def __init__(self, unstable, version):
 		if unstable:
@@ -159,15 +159,15 @@ class UpgradeController:
 		print(self.cc.OKGREEN + "==> Still analysing data..." + self.cc.ENDC)
 
 		toolbar_width = 80
-		sys.stdout.write("[%s]" % (" " * toolbar_width))
-		sys.stdout.flush()
-		sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
+		stdout.write("[%s]" % (" " * toolbar_width))
+		stdout.flush()
+		stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
 
 		for i in xrange(toolbar_width):
 		    time.sleep(0.005)
-		    sys.stdout.write(self.cc.OKBLUE + "#" + self.cc.ENDC)
-		    sys.stdout.flush()
-		sys.stdout.write("\n")
+		    stdout.write(self.cc.OKBLUE + "#" + self.cc.ENDC)
+		    stdout.flush()
+		stdout.write("\n")
 
 		if dates[0] <= self.info['date']:
 			print(self.cc.OKGREEN + "==> You're already running the latest version of Poke." + self.cc.ENDC)
@@ -181,11 +181,10 @@ class UpgradeController:
 						for asset in assets:
 							name = asset['name']
 							if name.endswith('tar.bz2'):
-								url = self.skel + "stable" + name
-								print name
+								url = self.skel + "stable/" + name
 								self.info['url'] = url
 
-		self.upgrade(self.info['url'], "",False)
+		self.upgrade(self.info['url'], name[5:10], False)
 
 	# Compares two dates and returns the newer (larger) one
 	def compareDates(self, a, b):
@@ -225,7 +224,15 @@ class UpgradeController:
 		if unstable:
 			print("Downloading latest unstable version. You have been warned.")
 
-		blob = raw_input("New version available. Would you like to upgrade now? [Y/n]: ")
+		mst = "New version available. Would you like to upgrade to version %s now? [Y/n]: " % target
+		blob = raw_input(mst)
+		if blob.lower() == "n":
+			return
+
+		w = "~/.poke/"
+		rows, columns = popen('stty size', 'r').read().split()
+		home = path.expanduser("~")
+		width = int(float(columns))
 
 		call("sudo cd ~/.poke", shell=True)
 		print("Opening stream to www.github.com")
@@ -233,19 +240,67 @@ class UpgradeController:
 			check_call(['wget'])
 		except CalledProcessError:
 			print(self.cc.HEADER + "==> USING WGET." + self.cc.ENDC)
-			call("wget %s -O poke.tar.bz2" % url, shell=True)
+			call("wget %s -O ~/.poke/poke.tar.bz2" % url, shell=True)
 		except OSError:
 			print(self.cc.HEADER + "==> USING CURL." + self.cc.ENDC)
-			call("curl '%s' -o 'poke.tar.bz2'" % url, shell=True)
+			call("curl '%s' -o '~/.poke/poke.tar.bz2'" % url, shell=True)
 
 		# Extracting the files to a neutral folder with no version string on it
-		call("mkdir ./tmp && tar -vxzf poke.tar.bz2 -C tmp --strip-components 1", shell=True)
+		call("mkdir %stmp && tar -xjvf %spoke.tar.bz2 -C %stmp/ --strip-components 1" % (w, w, w), shell=True)
 
-		print(self.cc.OKGREEN + "==> Running make script..." + self.cc.ENDC)
-		call("python tmp/make && sudo python tmp/make install", shell=True)
+		print(self.cc.OKGREEN + "==> Installing patch %s" % target + self.cc.ENDC)
+
+		print("==> Welcome to the friendly patching system")
+		print(self.cc.OKGREEN + "==> Configuring patcher..." + self.cc.ENDC)
+		call("python %stmp/pyinstall/utils/makespec.py -n poke -F %stmp/source/*.py" % (w, w), shell=True)
+
+		print("\n")
+		print(self.cc.OKGREEN + "==> Downloading compiler files" + self.cc.ENDC)
+		try:
+			check_call(['wget'])
+		except CalledProcessError:
+			print(self.cc.OKGREEN + "==> USING WGET" + self.cc.ENDC)
+			call("wget https://pypi.python.org/packages/source/P/PyInstaller/PyInstaller-2.1.tar.gz -O %stmp/pyinstall.tar.gz" % w, shell=True)
+		except OSError:
+			print(self.cc.OKGREEN + "==> USING CURL" + self.cc.ENDC)
+			call("curl 'https://pypi.python.org/packages/source/P/PyInstaller/PyInstaller-2.1.tar.gz' -o '%stmp/pyinstall.tar.gz'" % w, shell=True)
+
+		print(self.cc.OKGREEN + "==> Unpacking compiler ..." + self.cc.ENDC)
+		call("mkdir %stmp/pyinstall && tar -vxzf %stmp/pyinstall.tar.gz -C %stmp/pyinstall --strip-components 1" % (w, w, w), shell=True)
+		
+		print(self.cc.OKGREEN + "==> Configuring compiler ..." + self.cc.ENDC)
+		call("python %stmp/pyinstall/utils/makespec.py -n %stmp/poke -F %stmp/source/*.py" % (w, w, w), shell=True)
+		
+		print(self.cc.OKGREEN + "==> Compiling patch ..." + self.cc.ENDC)
+		call("cd %stmp/ && python pyinstall/pyinstaller.py poke.spec" % w, shell=True)
+
+
+		if path.isfile(home + '/.poke/tmp/dist/poke'):
+					print(self.cc.OKGREEN + "==> Patch %s compiled successfully!\n" % target + self.cc.ENDC)
+		else:
+			er = "==> Something went wrong while patching. Would you please consider heading over to www.github.com/SpaceKookie/Poke and creating a new issue with the stack trace and the version you were trying to compile? Thank you :) <3"
+			errorList = wrap(er, width=width)
+			for element in errorList:
+				print(self.cc.FAIL + element + self.cc.ENDC)
+			exit()
+
+		print(self.cc.OKGREEN + "==> Applying patch ..." + self.cc.ENDC)
+		call("sudo chmod +x %stmp/dist/poke" % w, shell=True)
+		call("sudo rm $(which poke)", shell=True)
+
+		print("==> Moving binary to /usr/bin")
+		call("sudo mv %stmp/dist/poke /usr/bin/poke" % w, shell=True)
+
+		print("==> Cleaning up")
+		call("rm -r %stmp/pyinstall %stmp/pyinstall.tar.gz  %stmp/dist/ %stmp/build/ %stmp/poke.spec %stmp/source/*.pyc" % (w, w, w, w, w, w), shell=True)
+
+		if path.isdir('/usr/local/src/poke'):
+			print("==> Moving new source files")
+			call("sudo rm -r /usr/local/src/poke", shell=True)
+			call("sudo mv %stmp /usr/local/src/poke" % w, shell=True)
+
+		print(self.cc.OKGREEN + "==> Patcher shutting down. Run 'poke --version' to verify result!" + self.cc.ENDC)
 		exit()
-
-
 
 
 
