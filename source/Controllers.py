@@ -73,20 +73,26 @@ class PurgeController:
 			exit()
 
 		if not geteuid()==0:
-			print "==> Not running with root privileges. Trying to elevate via 'sudo'."
+			print self.cc.WARNING + "==> Not running with root privileges. Trying to elevate via 'sudo'." + self.cc.ENDC
 			call("sudo echo '\033[92mSUCCESS!\033[0m'", shell=True)
 
 		askBin = raw_input("Remove binary from '/usr/bin'? [Y/n]: ").lower()
 		if askBin.lower() == "y" or askBin.lower() == "":
 			self.purgeBinary()
+		else:
+			print(self.cc.WARNING + "SKIPPED" + self.cc.ENDC)
 		
 		askSource = raw_input("Remove source files from '/usr/local/src'? [Y/n]: ").lower()
 		if askSource.lower() == "y" or askSource.lower() == "":
 			self.purgeSource()
+		else:
+			print(self.cc.WARNING + "SKIPPED" + self.cc.ENDC)
 		
-		askConf = raw_input("Remove configuration files from '~/.poke'? [Y/n]: ").lower()
-		if askConf.lower() == "y" or askConf.lower() == "":
+		askConf = raw_input("Remove configuration files from '~/.poke'? [y/N]: ").lower()
+		if askConf.lower() == "y":
 			self.purgeConfigs()
+		else:
+			print(self.cc.WARNING + "SKIPPED" + self.cc.ENDC)
 
 		if self.source and self.binary and self.config:
 			print(self.cc.HEADER + "==> Poke is now no longer installed on your system. I hope you're happy... :(" + self.cc.ENDC)
@@ -95,33 +101,32 @@ class PurgeController:
 		elif self.binary and self.config:
 			print(self.cc.HEADER + "==> Poke binary and config are no longer on your machine. But you can always recompile the tool from source at /usr/local/src/poke" + self.cc.ENDC)
 		else:
-			print "==> Poke is still installed."
-		print "Either way: Terminating!"
+			print(self.cc.OKGREEN + "==> Poke is still installed." + self.cc.ENDC)
 		exit()
 
 	def purgeBinary(self):
 		pipe = Popen(['which', 'poke'], stdout=PIPE, stdin=PIPE)
 		text = pipe.communicate()[0]
+		self.binary = True
 		if not text:
-			print("Poke binary couldn't be found on this system!")
+			print(self.cc.WARNING + "Poke binary couldn't be found on this system!" + self.cc.ENDC)
 		else:
 			call("sudo rm %s" % text, shell=True)
 			print(self.cc.OKGREEN + "SUCCESS!" + self.cc.ENDC)
-			self.binary = True
 
 	def purgeSource(self):
+		self.source = True
 		if path.isdir("/usr/local/src/poke") is True:
 			call("sudo rm -r /usr/local/src/poke", shell=True)
 			print(self.cc.OKGREEN + "SUCCESS!" + self.cc.ENDC)
-			self.source = True
 		else:
 			print(self.cc.WARNING + "Source files weren't found at expected location. Do they even exist?" + self.cc.ENDC)
 
 	def purgeConfigs(self):
+		self.config = True
 		if path.isdir(self.home + "/.poke"):
 			call("rm -r ~/.poke/", shell=True)
 			print(self.cc.OKGREEN + "SUCCESS!" + self.cc.ENDC)
-			self.config = True
 		else:
 			print(self.cc.WARNING + "I couldn't find any configs!" + self.cc.ENDC)
 
@@ -141,7 +146,7 @@ class UpgradeController:
 		# Getting root for the current process!
 		if not geteuid()==0:
 			print "==> Not running with root privileges. Trying to elevate via 'sudo'."
-			call("sudo echo '\033[92mSUCCESS!\033[0m'", shell=True)
+			call("sudo echo '%sSUCCESS!%s'" % (self.cc.OKGREEN, self.cc.ENDC), shell=True)
 
 		print("Opening stream to www.github.com")
 		req = urllib2.Request(self.url)
@@ -154,7 +159,7 @@ class UpgradeController:
 		# Goes through the data and copies the published-dates for analysis.
 		dates = []
 		for item in jdata:
-			dates.append(item.get('published_at'))
+			dates.append(item.get('created_at'))
 
 		print(self.cc.OKGREEN + "==> Still analysing data..." + self.cc.ENDC)
 
@@ -168,6 +173,11 @@ class UpgradeController:
 		    stdout.write(self.cc.OKBLUE + "#" + self.cc.ENDC)
 		    stdout.flush()
 		stdout.write("\n")
+
+		if self.info['date'] == -1:
+			print("I can't verify what version you're running :( It doesn't show up on the Github releases!")
+			print(self.cc.WARNING + "==> Best thing to do is just to download the latest stable release manually!" + self.cc.ENDC)
+			exit()
 
 		if dates[0] <= self.info['date']:
 			print(self.cc.OKGREEN + "==> You're already running the latest version of Poke." + self.cc.ENDC)
@@ -185,6 +195,7 @@ class UpgradeController:
 								self.info['url'] = url
 
 		self.upgrade(self.info['url'], name[5:10], False)
+		exit()
 
 	# Compares two dates and returns the newer (larger) one
 	def compareDates(self, a, b):
@@ -192,6 +203,27 @@ class UpgradeController:
 			return a
 		else:
 			return b
+
+	# Takes to x.y.z formatted version strings and returns the bigger one!
+	def compareVersions(self, a, b):
+		# The most comprehensive string names in the history of string names
+		aMa = a[0:1]
+		aMi = a[2:3]
+		aPa = a[4:5]
+		
+		bMa = b[0:1]
+		bMi = b[2:3]
+		bPa = b[4:5]
+
+		if aMa > bMa:
+			return a
+		elif aMa == bMa:
+			if aMi > bMi:
+				return a
+			elif aPa > bPa:
+				return a
+		return b
+
 
 	#poke-0.4.5.tar.bz2 5-10
 	# Magic that determines the date of the version currently running!
@@ -207,7 +239,7 @@ class UpgradeController:
 					versions['version'] = asset['name'][5:10]
 					versions['date'] = asset['created_at']
 			targets.append(versions)
-		
+
 		for target in targets:
 			if target['version'] == self.version:
 				print (self.cc.HEADER +"==> You are currently running Poke version " + self.version + " which was released on " + target['date']+ self.cc.ENDC)
@@ -216,6 +248,10 @@ class UpgradeController:
 				self.info['date'] = target['date']
 				self.info['packs'] = target['packs']
 				return
+
+		self.info = {}
+		self.info['version'] = self.version
+		self.info['date'] = -1
 
 	def getLatestUnstable(self, versions):
 		pass
@@ -227,6 +263,7 @@ class UpgradeController:
 		mst = "New version available. Would you like to upgrade to version %s now? [Y/n]: " % target
 		blob = raw_input(mst)
 		if blob.lower() == "n":
+			print("==> Keeping old, outdated and smelly version...")
 			return
 
 		w = "~/.poke/"
@@ -282,7 +319,7 @@ class UpgradeController:
 			errorList = wrap(er, width=width)
 			for element in errorList:
 				print(self.cc.FAIL + element + self.cc.ENDC)
-			exit()
+			return
 
 		print(self.cc.OKGREEN + "==> Applying patch ..." + self.cc.ENDC)
 		call("sudo chmod +x %stmp/dist/poke" % w, shell=True)
@@ -300,7 +337,7 @@ class UpgradeController:
 			call("sudo mv %stmp /usr/local/src/poke" % w, shell=True)
 
 		print(self.cc.OKGREEN + "==> Patcher shutting down. Run 'poke --version' to verify result!" + self.cc.ENDC)
-		exit()
+		return
 
 
 
