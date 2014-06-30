@@ -194,15 +194,21 @@ class UpgradeController:
 			print("Terminating...")
 			exit()
 
+
 		if not unstable:
 			for item in jdata:
-				if item['tag_name'] == 'stable':
-					assets = item['assets']
-					for asset in assets:
-						name = asset['name']
-						if name.endswith('tar.bz2'):
-							url = self.skel + "stable/" + name
-							self.info['url'] = url
+				if item['prerelease'] is False:
+					if self.isVersion(item['tag_name']):
+						if self.compareVersionsBools(item['tag_name'], self.version):
+							print(item['tag_name'] + " is bigger than current")
+
+				# if item['tag_name'] == 'stable':
+				# 	assets = item['assets']
+				# 	for asset in assets:
+				# 		name = asset['name']
+				# 		if name.endswith('tar.bz2'):
+				# 			url = self.skel + "stable/" + name
+				# 			self.info['url'] = url
 		else:
 			betas = []
 			for item in jdata:
@@ -218,6 +224,7 @@ class UpgradeController:
 				print "==> No new unstable releases!"
 				exit()
 
+		exit()
 		self.upgrade(self.info['url'], name[5:10], False)
 		exit()
 
@@ -236,6 +243,7 @@ class UpgradeController:
 
 	# Takes to x.y.z formatted version strings and returns IF THE FIRST ONE IS BIGGER!
 	def compareVersionsBools(self, a, b):
+		if a == b: return False
 		# The most comprehensive string names in the history of string names
 		aMa = a[0:1]
 		aMi = a[2:3]
