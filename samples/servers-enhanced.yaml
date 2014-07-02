@@ -1,0 +1,23 @@
+# New server configuration example switching from the .ini config to YAML configurations!
+# Allows for more and more flexible fields.
+Servers:
+	NAS:
+		-Name: Example Server
+		-URL: example.com
+		-ShortHand: e
+		-LongHand: example
+		Users:
+			-Default: user
+			-Root: root
+			-Apache: apache
+		-XDef: False
+		-Key: default
+
+	Work:
+		-Name: Work Server
+		-URL: work.something.com
+		-ShortHand: w
+		-LongHand: work
+		-XDef: True
+		-User: employee
+		-Key: work
