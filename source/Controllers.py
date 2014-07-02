@@ -28,6 +28,7 @@ from os import environ, pathsep, path, geteuid, popen
 from Strings import Strings, CCodes
 from sys import exit, stdout, argv
 from textwrap import wrap
+from re import sub
 import urllib2
 import json
 import time
@@ -190,6 +191,7 @@ class UpgradeController:
 							print(self.cc.WARNING + "==> Currently running version is outdated by an unstable package..." + self.cc.ENDC)
 							self.info['version'] = item['tag_name']
 							self.info['pack'] = "poke-" + item['tag_name'] + ".tar.bz2"
+							self.info['url'] = self.skel + "/" + str(self.info['version']) + "/" + str(self.info['pack'])
 						else:
 							print(self.cc.WARNING + "==> No new stable releases to upgrade to!" + self.cc.ENDC)
 							exit()
@@ -199,6 +201,9 @@ class UpgradeController:
 					if self.isVersion(item['tag_name']):
 						if self.compareVersionsBools(item['tag_name'], self.version):
 							print(self.cc.WARNING + "==> Currently running version is outdated by an unstable package..." + self.cc.ENDC)
+							self.info['version'] = item['tag_name']
+							self.info['pack'] = "poke-" + item['tag_name'] + ".tar.bz2"
+							self.info['url'] = self.skel + "/" + str(self.info['version']) + "/" + str(self.info['pack'])
 						else:
 							print(self.cc.WARNING + "==> No new unstable releases to upgrade to!" + self.cc.ENDC)
 							exit()
@@ -249,8 +254,7 @@ class UpgradeController:
 		# 		print "==> No new unstable releases!"
 		# 		exit()
 
-		print("Now trying to upgrade")
-		self.upgrade(self.info['url'], name[5:10], False)
+		self.upgrade(self.info['url'], self.info['version'], False)
 		exit()
 
 	# Compares two dates and returns the newer (larger) one
@@ -266,46 +270,22 @@ class UpgradeController:
 			if string[1] == "." and string[3] == ".": return True
 		return False
 
-	# Takes to x.y.z formatted version strings and returns IF THE FIRST ONE IS BIGGER!
 	def compareVersionsBools(self, a, b):
-		if a == b: return False
-		# The most comprehensive string names in the history of string names
-		aMa = a[0:1]
-		aMi = a[2:3]
-		aPa = a[4:5]
-		
-		bMa = b[0:1]
-		bMi = b[2:3]
-		bPa = b[4:5]
-
-		if aMa > bMa:
+		def normalize(v):
+			return [int(x) for x in sub(r'(\.+)*$','', v).split(".")]
+		if normalize(a) > normalize(b):
 			return True
-		elif aMa == bMa:
-			if aMi > bMi:
-				return True
-			elif aPa > bPa:
-				return True
-		return False
+		else:
+			return False
 
 	# Takes to x.y.z formatted version strings and returns the bigger one!
 	def compareVersions(self, a, b):
-		# The most comprehensive string names in the history of string names
-		aMa = a[0:1]
-		aMi = a[2:3]
-		aPa = a[4:5]
-		
-		bMa = b[0:1]
-		bMi = b[2:3]
-		bPa = b[4:5]
-
-		if aMa > bMa:
+		def normalize(v):
+			return [int(x) for x in sub(r'(\.+)*$','', v).split(".")]
+		if normalize(a) > normalize(b):
 			return a
-		elif aMa == bMa:
-			if aMi > bMi:
-				return a
-			elif aPa > bPa:
-				return a
-		return b
+		else:
+			return b
 
 
 	#poke-0.4.5.tar.bz2 5-10
@@ -335,9 +315,6 @@ class UpgradeController:
 		self.info = {}
 		self.info['version'] = self.version
 		self.info['date'] = -1
-
-	def getLatestUnstable(self, versions):
-		pass
 
 	def upgrade(self, url, target, unstable):
 		mst = "New version available. Would you like to upgrade to version %s now? [Y/n]: " % target
