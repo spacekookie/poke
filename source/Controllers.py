@@ -133,7 +133,6 @@ class PurgeController:
 class UpgradeController:
 	url = 'https://api.github.com/repos/SpaceKookie/Poke/releases'
 	skel = 'https://github.com/SpaceKookie/Poke/releases/download/'
-	uskel = 'https://github.com/SpaceKookie/Poke/releases/download/'
 
 	def __init__(self, unstable, version):
 		self.forceLatest = False
@@ -171,60 +170,86 @@ class UpgradeController:
 
 		print(self.cc.OKGREEN + "==> Still analysing data..." + self.cc.ENDC)
 
+		# Renders progress bar
 		toolbar_width = 80
 		stdout.write("[%s]" % (" " * toolbar_width))
 		stdout.flush()
 		stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
-
 		for i in xrange(toolbar_width):
 		    time.sleep(0.005)
 		    stdout.write(self.cc.OKBLUE + "#" + self.cc.ENDC)
 		    stdout.flush()
 		stdout.write("\n")
 
-		if not unstable:
-			if self.info['date'] == -1:
-				if not self.forceLatest:
-					print("I can't verify what version you're running :( It doesn't show up on the Github releases!")
-					print(self.cc.WARNING + "==> Best thing to do is just to download the latest stable release manually or run 'poke upgrade -f'" + self.cc.ENDC)
-					exit()
-
-		if dates[0] <= self.info['date']:
-			print(self.cc.OKGREEN + "==> You're already running the latest version of Poke." + self.cc.ENDC)
-			print("Terminating...")
-			exit()
-
-
-		if not unstable:
+		# If only stable releases releases are considered.
+		if unstable is False:
 			for item in jdata:
 				if item['prerelease'] is False:
 					if self.isVersion(item['tag_name']):
 						if self.compareVersionsBools(item['tag_name'], self.version):
-							print(item['tag_name'] + " is bigger than current")
-
-				# if item['tag_name'] == 'stable':
-				# 	assets = item['assets']
-				# 	for asset in assets:
-				# 		name = asset['name']
-				# 		if name.endswith('tar.bz2'):
-				# 			url = self.skel + "stable/" + name
-				# 			self.info['url'] = url
+							print(self.cc.WARNING + "==> Currently running version is outdated by an unstable package..." + self.cc.ENDC)
+							self.info['version'] = item['tag_name']
+							self.info['pack'] = "poke-" + item['tag_name'] + ".tar.bz2"
+						else:
+							print(self.cc.WARNING + "==> No new stable releases to upgrade to!" + self.cc.ENDC)
+							exit()
 		else:
-			betas = []
 			for item in jdata:
-				if self.isVersion(item['tag_name']):
-					betas.append(item['tag_name'])
+				if item['prerelease'] is True:
+					if self.isVersion(item['tag_name']):
+						if self.compareVersionsBools(item['tag_name'], self.version):
+							print(self.cc.WARNING + "==> Currently running version is outdated by an unstable package..." + self.cc.ENDC)
+						else:
+							print(self.cc.WARNING + "==> No new unstable releases to upgrade to!" + self.cc.ENDC)
+							exit()
 
-			if self.compareVersionsBools(betas[0], self.version):
-				print(self.cc.WARNING + "Currently running version is outdated by an unstable package..." + self.cc.ENDC)
-				name = betas[0]
-				url = self.uskel + name + "/poke-" + name + ".tar.bz2"
-				self.info['url'] = url
-			else:
-				print "==> No new unstable releases!"
-				exit()
+		# https://github.com/SpaceKookie/Poke/releases/download/0.4.5/poke-0.4.5.tar.bz2 >> STABLE
+		# https://github.com/SpaceKookie/Poke/releases/download/0.4.9/poke-0.4.9.tar.bz2 >> UNSTABLE
 
-		exit()
+		# if not unstable:
+		# 	if self.info['date'] == -1:
+		# 		if not self.forceLatest:
+		# 			print("I can't verify what version you're running :( It doesn't show up on the Github releases!")
+		# 			print(self.cc.WARNING + "==> Best thing to do is just to download the latest stable release manually or run 'poke upgrade -f'" + self.cc.ENDC)
+		# 			exit()
+
+		# if dates[0] <= self.info['date']:
+		# 	print(self.cc.OKGREEN + "==> You're already running the latest version of Poke." + self.cc.ENDC)
+		# 	print("Terminating...")
+		# 	exit()
+
+
+		# if not unstable:
+		# 	for item in jdata:
+		# 		if item['prerelease'] is False:
+		# 			if self.isVersion(item['tag_name']):
+		# 				if self.compareVersionsBools(item['tag_name'], self.version):
+		# 					print(item['tag_name'] + " is bigger than current")
+
+		# if item['tag_name'] == 'stable':
+		# 	assets = item['assets']
+		# 	for asset in assets:
+		# 		name = asset['name']
+		# 		if name.endswith('tar.bz2'):
+		# 			url = self.skel + "stable/" + name
+		# 			self.info['url'] = url
+
+		# else:
+		# 	betas = []
+		# 	for item in jdata:
+		# 		if self.isVersion(item['tag_name']):
+		# 			betas.append(item['tag_name'])
+
+		# 	if self.compareVersionsBools(betas[0], self.version):
+		# 		print(self.cc.WARNING + "Currently running version is outdated by an unstable package..." + self.cc.ENDC)
+		# 		name = betas[0]
+		# 		url = self.uskel + name + "/poke-" + name + ".tar.bz2"
+		# 		self.info['url'] = url
+		# 	else:
+		# 		print "==> No new unstable releases!"
+		# 		exit()
+
+		print("Now trying to upgrade")
 		self.upgrade(self.info['url'], name[5:10], False)
 		exit()
 
