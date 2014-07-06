@@ -1,5 +1,10 @@
-#!/usr/bin/python
+import json
 
-import yaml
-stream = open("servers-enhanced.yaml", 'r')
-print yaml.load(stream)
+jdata = json.load(open("configs.json"))
+
+print jdata
+print("\n\n\n\n")
+
+for item in jdata:
+	for subitem in jdata[item]:
+		print subitem

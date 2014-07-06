@@ -1,0 +1,43 @@
+{
+	"Servers":[
+	{
+		"Name": "R2Soft",
+		"ShortHand": "r",
+		"LongHand": "r2soft",
+		"URL": "r2soft.de",
+		"Users": {
+			"Default": "katharina",
+			"Root": "root",
+			"Maintenance": "sideshow-bob"
+			},
+		"XDef": "False",
+		"Key": "Default"
+	},
+	{
+		"Name": "NAS",
+		"ShortHand": "n",
+		"LongHand": "nas",
+		"URL": "192.168.2.131",
+		"User": "spacekookie",
+		"Users": {
+			"Default": "spacekookie"
+			},
+		"XDef": "True",
+		"Key": "Default"
+	}
+	],
+	"Keys":[
+	{
+		"ID": "default",
+		"ShortID": "def",
+		"Path": "rsa_id",
+		"Access": 3
+	},
+	{
+		"ID": "work-key",
+		"ShortID": "wk",
+		"Path": "work_id",
+		"Access": 0
+	}
+]
+}

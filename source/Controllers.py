@@ -132,7 +132,10 @@ class PurgeController:
 			print(self.cc.WARNING + "I couldn't find any configs!" + self.cc.ENDC)
 
 class UpgradeController:
+	# GitHub versioning URL
 	url = 'https://api.github.com/repos/SpaceKookie/Poke/releases'
+
+	# GitHub skeleton download URL
 	skel = 'https://github.com/SpaceKookie/Poke/releases/download/'
 
 	def __init__(self, unstable, version):
@@ -157,6 +160,7 @@ class UpgradeController:
 				print(self.cc.WARNING + "Force upgrade only works for stable releases!" + self.cc.ENDC)
 
 		print("Opening stream to www.github.com")
+		# self.fetch()
 		req = urllib2.Request(self.url)
 		opener = urllib2.build_opener()
 		f = opener.open(req)
@@ -208,54 +212,14 @@ class UpgradeController:
 							print(self.cc.WARNING + "==> No new unstable releases to upgrade to!" + self.cc.ENDC)
 							exit()
 
-		# https://github.com/SpaceKookie/Poke/releases/download/0.4.5/poke-0.4.5.tar.bz2 >> STABLE
-		# https://github.com/SpaceKookie/Poke/releases/download/0.4.9/poke-0.4.9.tar.bz2 >> UNSTABLE
-
-		# if not unstable:
-		# 	if self.info['date'] == -1:
-		# 		if not self.forceLatest:
-		# 			print("I can't verify what version you're running :( It doesn't show up on the Github releases!")
-		# 			print(self.cc.WARNING + "==> Best thing to do is just to download the latest stable release manually or run 'poke upgrade -f'" + self.cc.ENDC)
-		# 			exit()
-
-		# if dates[0] <= self.info['date']:
-		# 	print(self.cc.OKGREEN + "==> You're already running the latest version of Poke." + self.cc.ENDC)
-		# 	print("Terminating...")
-		# 	exit()
-
-
-		# if not unstable:
-		# 	for item in jdata:
-		# 		if item['prerelease'] is False:
-		# 			if self.isVersion(item['tag_name']):
-		# 				if self.compareVersionsBools(item['tag_name'], self.version):
-		# 					print(item['tag_name'] + " is bigger than current")
-
-		# if item['tag_name'] == 'stable':
-		# 	assets = item['assets']
-		# 	for asset in assets:
-		# 		name = asset['name']
-		# 		if name.endswith('tar.bz2'):
-		# 			url = self.skel + "stable/" + name
-		# 			self.info['url'] = url
-
-		# else:
-		# 	betas = []
-		# 	for item in jdata:
-		# 		if self.isVersion(item['tag_name']):
-		# 			betas.append(item['tag_name'])
-
-		# 	if self.compareVersionsBools(betas[0], self.version):
-		# 		print(self.cc.WARNING + "Currently running version is outdated by an unstable package..." + self.cc.ENDC)
-		# 		name = betas[0]
-		# 		url = self.uskel + name + "/poke-" + name + ".tar.bz2"
-		# 		self.info['url'] = url
-		# 	else:
-		# 		print "==> No new unstable releases!"
-		# 		exit()
-
 		self.upgrade(self.info['url'], self.info['version'], False)
 		exit()
+
+	def fetch(self):
+		req = urllib2.Request(self.url)
+		opener = urllib2.build_opener()
+		f = opener.open(req)
+		jdata = json.load(f)
 
 	# Compares two dates and returns the newer (larger) one
 	def compareDates(self, a, b):
@@ -396,3 +360,24 @@ class UpgradeController:
 
 		print(self.cc.OKGREEN + "==> Patcher shutting down. Run 'poke --version' to verify result!" + self.cc.ENDC)
 		return
+
+class Converter:
+	pass
+
+	def __init__(self, home, version):
+		self.path = homr + "/.poke"
+		self.version = version
+
+	# Merges key and server configs
+	def merge_documents(self):
+		tmpServers = None
+		tmpKeys = None
+
+		if path.isdir(self.path):
+			if path.isfile(path + "/servers.cfg"):
+				tmpServers = open(path + "/servers.cfg")
+
+			if path.isfile(path + "/keys.cfg"):
+				tmpKeys = open(path + "/keys.cfg")
+
+
