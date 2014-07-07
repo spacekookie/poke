@@ -55,6 +55,8 @@ class JSONHandle:
 		pass
 
 	def load(self, path):
+		tmp = open(path)
+		jdata = json.read(tmp)
 		pass
 
 	def load_prefedined(self):

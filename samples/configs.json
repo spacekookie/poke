@@ -23,7 +23,9 @@
 			"Default": "spacekookie"
 			},
 		"XDef": "True",
-		"Key": "Default"
+		"Keys":{
+			"Default": "default"
+		},
 	}
 	],
 	"Keys":[
