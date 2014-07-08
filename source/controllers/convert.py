@@ -24,5 +24,31 @@ Found a bug? Report it in the repository issue tracker:
 
 '''
 
-class PurgeController:
+from os import environ, pathsep, path, geteuid, popen
+
+class ConvertionController:
 	pass
+
+	def __init__(self, home, version):
+		self.path = str(home) + "/.poke"
+		self.version = version
+
+	# Merges key and server configs
+	def merge_documents(self):
+		tmpServers = None
+		tmpKeys = None
+
+		if path.isdir(self.path):
+			if path.isfile(self.path + "/servers.cfg"):
+				print "Found servers"
+				# tmpServers = open(path + "/servers.cfg")
+
+			if path.isfile(self.path + "/keys.cfg"):
+				print "Found keys"
+				# tmpKeys = open(path + "/keys.cfg")
+
+
+cc = ConvertionController("/home/spacekookie", "0.5.0")
+print cc.path
+print cc.version
+cc.merge_documents()

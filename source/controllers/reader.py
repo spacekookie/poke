@@ -24,5 +24,5 @@ Found a bug? Report it in the repository issue tracker:
 
 '''
 
-class PurgeController:
+class ConfigController:
 	pass

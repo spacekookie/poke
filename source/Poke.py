@@ -65,6 +65,7 @@ class Poke():
 					u = UpgradeController(True, self.version) #Ends session
 				else:
 					exit()
+			
 			#TODO: Get rid of this override. This should only be handled via the OptionsParser.
 			# You shouldn't write your own little side-ways into certain parts of the application!
 			elif argv[1] == "-?":
