@@ -112,7 +112,7 @@ try:
 	call("mkdir ./pyinstall && tar -vxzf pyinstall.tar.gz -C pyinstall --strip-components 1", shell=True)
 
 	print("\033[92m==> Configuring application build file to system\033[0m")
-	call("python pyinstall/utils/makespec.py -n poke -F source/*.py", shell=True)
+	call("python pyinstall/utils/makespec.py -n poke -F poke/*.py", shell=True)
 
 	print("\n")
 	print("\033[92m==> Compiling application\033[0m")
