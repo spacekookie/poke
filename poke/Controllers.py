@@ -77,7 +77,7 @@ class PurgeController:
 			print self.cc.WARNING + "==> Not running with root privileges. Trying to elevate via 'sudo'." + self.cc.ENDC
 			call("sudo echo '\033[92mSUCCESS!\033[0m'", shell=True)
 
-		askBin = raw_input("Remove binary from '/usr/bin'? [Y/n]: ").lower()
+		askBin = raw_input("Remove binary from '/usr/local/bin'? [Y/n]: ").lower()
 		if askBin.lower() == "y" or askBin.lower() == "":
 			self.purgeBinary()
 		else:
@@ -346,8 +346,8 @@ class UpgradeController:
 		call("sudo chmod +x %stmp/dist/poke" % w, shell=True)
 		call("sudo rm $(which poke)", shell=True)
 
-		print("==> Moving binary to /usr/bin")
-		call("sudo mv %stmp/dist/poke /usr/bin/poke" % w, shell=True)
+		print("==> Moving binary to /usr/local/bin")
+		call("sudo mv %stmp/dist/poke /usr/local/bin/poke" % w, shell=True)
 
 		print("==> Cleaning up")
 		call("rm -r %stmp/pyinstall %stmp/pyinstall.tar.gz  %stmp/dist/ %stmp/build/ %stmp/poke.spec %stmp/source/*.pyc" % (w, w, w, w, w, w), shell=True)

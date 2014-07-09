@@ -48,23 +48,23 @@ try:
 				binary = False
 				source = False
 
-				print("\033[95m==> Installing application to /usr/bin/\033[0m")
+				print("\033[95m==> Installing application to /usr/local/bin/\033[0m")
 				call("sudo chmod +x dist/poke", shell=True)
 				try:
-					call("sudo mv dist/poke /usr/bin/poke", shell=True)
-					print("Successfully moved binary to /usr/bin!")
+					call("sudo mv dist/poke /usr/local/bin/poke", shell=True)
+					print("Successfully moved binary to /usr/local/bin!")
 					binary = True
 				except Exception:
 					print("Error while moving binary!")
 
-				cpath = raw_input("\033[95m==> Link /usr/bin to $PATH? [Y/n]: \033[0m")
+				cpath = raw_input("\033[95m==> Link /usr/local/bin to $PATH? [Y/n]: \033[0m")
 				if cpath.lower() == "y" or cpath.lower() == "":
 					path = environ['PATH'].split(pathsep)
-					if not'/usr/bin' in path:
-						call("export PATH='$PATH:/usr/bin'", shell=True)
+					if not'/usr/local/bin' in path:
+						call("export PATH='$PATH:/usr/local/bin'", shell=True)
 						print("Successfully linked $PATH!")
 					else:
-						print("/usr/bin already in $PATH!")
+						print("/usr/local/bin already in $PATH!")
 				else:
 					print("Not linking directory to $PATH!")
 
@@ -77,9 +77,9 @@ try:
 				print("I'm done doin stuff now. Cleaning up after myself...")
 				call("rm -r pyinstall pyinstall.tar.gz  dist/ build/ poke.spec source/*.pyc", shell=True)
 				if binary:
-					final = "\033[92m==> You now have a binary in /usr/bin"
+					final = "\033[92m==> You now have a binary in /usr/local/bin"
 				else:
-					final = "\033[91m==> Copying the binary to /usr/bin failed!"
+					final = "\033[91m==> Copying the binary to /usr/local/bin failed!"
 				if source:
 					final = final + " and your source files are at /usr/local/src/poke!\033[92m"
 				print(final)
