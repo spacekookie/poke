@@ -24,5 +24,14 @@ Found a bug? Report it in the repository issue tracker:
 
 '''
 
-class ConfigController:
+from ConfigParser import ConfigParser
+import json as js
+
+
+''' Reads pre 0.5.2 style config files '''
+class ConfigReader:
+	pass
+
+''' Reads post 0.5.1 style config files '''
+class JsonReader:
 	pass

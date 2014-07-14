@@ -34,6 +34,7 @@ class Strings():
 		self.keyBody = ["[Key1]", "ID: default", "ShortID: def", "Path: id_rsa", "Access: 3", "", "[Key2]", "ID: work-key", "ShortID: wk", "Path: work_id", "Access: 0"]
 
 		self.globalHead = ["This file contains important information to run Poke", "Do not change anything unless you know what you're doing!", "In case of corruption remove this file to re-init"]
+		
 class CCodes():
 
 	def __init__(self):
@@ -43,3 +44,10 @@ class CCodes():
 		self.WARNING = "\033[93m"
 		self.FAIL = "\033[91m"
 		self.ENDC = "\033[0m"
+
+class PurgeDiag:
+
+	def __init__(self):
+		self.init_head = "==> YOU ARE ABOUT TO PURGE POKE FROM YOUR SYSTEM !!!\n"
+		self.init_check = "I will need root privileges to remove Poke correctly. Continue? [Y/n]: "
+		self.init_canceled = "==> PURGE CANCELED"

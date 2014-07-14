@@ -35,6 +35,7 @@ from Strings import CCodes
 from Intro import Setup
 from os import path, popen
 import textwrap
+import __init__
 
 # This is the main application file and entry point for the Poke commandline tool.
 class Poke():

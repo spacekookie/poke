@@ -24,6 +24,7 @@ Found a bug? Report it in the repository issue tracker:
 
 '''
 
+''' Standard upgrade controller class that patches Poke installation '''
 class VersionController:
 	pass
 	
@@ -36,6 +37,17 @@ class VersionController:
 		opener = urllib2.build_opener()
 		f = opener.open(req)
 		jdata = json.load(f)
+
+''' Patcher class that reads patch files and upgrades the system according to written configurations '''
+class Patcher:
+
+	def __init__(self):
+		self.cc = CCodes()
+
+
+		pass
+
+	pass
 
 class UpgradeController:
 	pass
