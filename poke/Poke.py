@@ -26,14 +26,14 @@ Found a bug? Report it in the repository issue tracker:
 
 from Controllers import CallbackController, PurgeController, UpgradeController
 from optparse import OptionParser, SUPPRESS_HELP, OptionGroup
+from IOHandle import Handle, ConfigHandle
 from ConfigParser import ConfigParser
 from datetime import datetime
 from subprocess import call
-from IOHandle import Handle
-from sys import exit, argv
 from Strings import CCodes
-from Intro import Setup
 from os import path, popen
+from sys import exit, argv
+from Intro import Setup
 import textwrap
 
 # This is the main application file and entry point for the Poke commandline tool.
@@ -45,11 +45,17 @@ class Poke():
 	workingDirectory = ".poke" # Change this to rename working directory
 	access = 1 # if 0 root is required to write and/or read ssh/ servers
 
-	rows, columns = popen('stty size', 'r').read().split()
-	cwidth = int(float(columns))
+	# rows, columns = popen('stty size', 'r').read().split()
+	# cwidth = int(float(columns))
 
 	def main(self):
-		cb = CallbackController(self.home, self.workingDirectory)
+		# If it went through the custom actions it will initiate itself!
+		# Creates a starter object to init default values. If already set these will be read from config
+		start = Setup(self.home, self.version, self.workingDirectory)
+		start.make()
+
+		global_config = ConfigHandle(self.home)
+		cb = CallbackController(self.home, self.workingDirectory, global_config.read_configs())
 		self.cc = CCodes()
 		self.hadErrors = False
 
@@ -66,15 +72,10 @@ class Poke():
 				else:
 					exit()
 			
-			#TODO: Get rid of this override. This should only be handled via the OptionsParser.
+			# TODO: Get rid of this override. This should only be handled via the OptionsParser.
 			# You shouldn't write your own little side-ways into certain parts of the application!
 			elif argv[1] == "-?":
-				cb.runVi(None, None, None, None)
-
-		# If it went through the custom actions it will initiate itself!
-		# Creates a starter object to init default values. If already set these will be read from config
-		start = Setup(self.home, self.version, self.workingDirectory)
-		start.make()
+				cb.runEditor(None, None, None, None)
 
 		# Future server to connect to!
 		self.con = {}
@@ -103,7 +104,7 @@ class Poke():
 		parser.remove_option("-h") # Remove default help from screen. TEMP WORKAROUND!
 
 		# parser.add_option("upgrade", action="callback", help=SUPPRESS_HELP, callback=cb.helpMe)
-		parser.add_option("-?", action="callback", help="Open 'Vi' to editor your config files!", callback=cb.runVi)
+		parser.add_option("-?", action="callback", help="Open preferred editor to edit your config files!", callback=cb.runEditor)
 
 		administrative = OptionGroup(parser, "Overwrite Settings")
 		administrative.add_option("-K", action="store", help="Overwrite stored key-setting for a server. Note: this is usually not very useful. Add the apropriate key to your keys.cfg file instead!", type="string", dest="SSH_KEY")

@@ -90,6 +90,7 @@ class Setup:
 
 		config.write("\n")
 		config.write("Init on: " + time.strftime("%c") + "\n")
+		config.write("$EDITOR:" + "vi" + "\n")
 		config.write("$PATH:" + self.home + "\n")
 		config.write("$DIR:" + ".poke" + "\n")
 		config.write("$OS:" + platform.system() + " " + platform.release() + "\n")
