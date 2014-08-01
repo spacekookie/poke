@@ -49,6 +49,20 @@ class Handle:
 		value = self.home + "/" + ".ssh" + "/" + path
 		return value
 
+class ConfigHandle:
+
+	def __init__(self, home):
+		self.home = home
+
+	def read_configs(self):
+		blob = open(self.home + "/" + ".poke" + "/" + "global", "r")
+		for line in blob:
+			if line.startswith("$EDITOR:"):
+				editor = line[8:]
+		blob.close()
+		return editor
+
+
 class JSONHandle:
 
 	def __init__(self):

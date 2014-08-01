@@ -36,12 +36,31 @@ import time
 
 class CallbackController:
 
-	def __init__(self, home, wdir):
+	def __init__(self, home, wdir, pref):
+		self.cc = CCodes()
 		self.home = home
 		self.wdir = wdir
+		self.pref = pref
 
-	def runVi(self, option, opt_str, value, parser):
-		call("vi " + self.home + "/" + self.wdir, shell=True)
+	def runEditor(self, option, opt_str, value, parser):
+		if self.pref == "vi\n":
+			call("vi " + self.home + "/" + self.wdir, shell=True)
+		elif self.pref == "nano\n":
+			while 1:
+				response = raw_input(self.cc.WARNING + "Nano can only open one file at a time. Edit [servers] or [keys]? " + self.cc.ENDC)
+				if response == "servers":
+					call("nano " + self.home + "/" + self.wdir + "/servers.cfg", shell=True)
+					break
+				elif response == "keys":
+					call("nano " + self.home + "/" + self.wdir + "/keys.cfg", shell=True)
+					break
+				else:
+					pass
+		elif self.pref == "emacs\n":
+			call("emacs " + self.home + "/" + self.wdir, shell=True)
+		else:
+			print self.cc.FAIL + "MALFORMED EDITOR INFORMATION! REMOVE ~/.poke/global TO RE-INIT" + self.cc.ENDC
+
 		exit()
 
 	def helpMe(self, option, opt_str, value, parser):
