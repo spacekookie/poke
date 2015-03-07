@@ -1,6 +1,20 @@
 # Poke SSH utility
 This is an SSH command-line utility tool designed to connect you to various ssh servers. 
 
+
+===
+**Poke is currently being designed from scratch with the AdvOptionsParser library here:** https://github.com/SpaceKookie/OptionsPie
+
+**Future versions will have an easier install/ upgrade and workflow process.**
+**Version 0.6.0 is currently in the making**
+
+===
+
+
+// Depreciated:
+
+
+
 Instead of having to type server connections over and over or use 10 different aliases to do 10 different things you can now use Poke to set up as many SSH connections as you want and use them all with just one command.
 
 ## How to install
