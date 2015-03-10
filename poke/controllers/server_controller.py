@@ -1,0 +1,2 @@
+class PokeControllers:
+	pass
