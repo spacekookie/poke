@@ -1,4 +1,3 @@
-
 class PokeUtil:
 
 	def __init__(self):

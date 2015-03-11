@@ -1,2 +1,2 @@
-class PokeControllers:
+class ServerController:
 	pass
