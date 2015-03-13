@@ -42,12 +42,11 @@ class ServerController:
 		server['url'] = url
 		server['port'] = port
 
-		print "This is a new server: ", server 
-
 		tmp_file = self.path + name + __SERVER__
 		if not os.path.exists(tmp_file):
 			pickle.dump(server, open(tmp_file, 'wb+'))
 			os.chmod(tmp_file, 0600)
+			print "Server", name, "was created successfully!"
 		else:
 			print "Server", name, "already exists. Please update it instead."
 

@@ -19,6 +19,9 @@ import version
 import getpass
 import sys
 
+__USER__ = getpass.getuser()
+__PORT__ = 22
+
 class PokeConfigManager:
 
 	def __init__(self):
@@ -51,8 +54,8 @@ class PokeConfigManager:
 		self.parser.add_suboptions('add-server', {
 			'--name': (None, p.__FIELD__, ""),
 			'--url': (None, p.__FIELD__, ""),
-			'--port': (22, p.__FIELD__, "(default: 22)"),
-			'--user': (None, p.__FIELD__, "(default: " + getpass.getuser() + ")"),
+			'--port': (22, p.__FIELD__, "(default: " + str(__PORT__) + ")"),
+			'--user': (None, p.__FIELD__, "(default: " + __USER__ + ")"),
 		})
 
 		self.parser.add_suboptions('rm-server', {
@@ -63,7 +66,7 @@ class PokeConfigManager:
 			'--name': (None, p.__FIELD__, "Specify a server to add this function to"),
 			'--remote': (None, p.__FIELD__, "(default: ~/)"),
 			'--local': (22, p.__FIELD__, "(default: /mnt/<name of server>)"),
-			'--user': (None, p.__FIELD__, "(default: " + getpass.getuser() + ")"),
+			'--user': (None, p.__FIELD__, "(default: " + __USER__ + ")"),
 		})
 
 		self.parser.add_suboptions('rm-mount', {
@@ -80,28 +83,36 @@ class PokeConfigManager:
 			'--name': (None, p.__FIELD__, "Specify a server to remove this function from"),
 		})
 
-
-		# self.parser.add_suboptions('function', {
-		# 	'type': (None, p.__FIELD__, "Type of function (mount, connect, copy, push)")
-		# })
-
-		# self.parser.define_fields({
-		# 	'add': ("Add to the respective value", ""),
-		# 	'remove': ('Remove from the respective scope', "")
-		# })
-		self.parser.help_screen()
+		# self.parser.help_screen()
 
 	def run(self, args):
 		if args == []:
 			self.parser.help_screen()
 		else:
-			pass
-			# self.parser.parse()
+			self.parser.parse(' '.join(args))
 
 	def handle(self, master, field, sub, data):
-		print master, field, sub, data
+		if master == "add-server":
+			if '--port' not in data:
+				data['--port'] = __PORT__
+			self.sc.add_server(data['--name'], data['--url'], data['--port'])
+		elif master == "rm-server":
+			self.sc.add_server(data['--name'])
 
+		elif master == "add-mount":
+			if '--user' not in data: data['--user'] = __USER__
+			if '--local' not in data: data['--local'] = '/mnt/' + data['--name']
+
+			self.sc.add_server_function(data['--name'], 'mount', {'remote': data['--remote'], 'local': data['--local'], 'user': data['--user']}, False)
+		elif master == "rm-mount":
+			self.sc.remove_server_function(self, data['--name'], 'mount')
+		elif master == "add-copy":
+			self.sc.add_server_function(data['--name'], 'copy', {'remote': data['--remote'], 'user': data['--user']}, False)
+		elif master == "rm-copy":
+			self.sc.remove_server_function(data['--name'], 'copy')
+		else:
+			self.parser.help_screen()
 
 if __name__ == "__main__":
 	pcm = PokeConfigManager()
-	# pcm.run(sys.argv[1:])
+	pcm.run(sys.argv[1:])
