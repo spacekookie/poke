@@ -6,7 +6,7 @@ Poke Config Manager - Manage Poke configurations
 Application
 ============
 
-:copyright: (c) 2015 Katharina Sabel
+:copyright: (c) 2014-2015 Katharina Sabel
 :license: GPLv3 (See LICENSE)
 """
 
@@ -54,6 +54,7 @@ class PokeConfigManager:
 		self.parser.add_suboptions('add-server', {
 			'--name': (None, p.__FIELD__, ""),
 			'--url': (None, p.__FIELD__, ""),
+			'--note': (None, p.__FIELD__, "(default: <name of server> remote server)"),
 			'--port': (22, p.__FIELD__, "(default: " + str(__PORT__) + ")"),
 			'--user': (None, p.__FIELD__, "(default: " + __USER__ + ")"),
 		})
@@ -95,7 +96,14 @@ class PokeConfigManager:
 		if master == "add-server":
 			if '--port' not in data:
 				data['--port'] = __PORT__
-			self.sc.add_server(data['--name'], data['--url'], data['--port'])
+
+			if '--note' not in data:
+				data['--note'] = data['--name'] + ' remote server'
+
+			if '--user' not in data:
+				data['--user'] = __USER__
+
+			self.sc.add_server(data['--name'], data['--user'], data['--url'], data['--note'], data['--port'])
 		elif master == "rm-server":
 			self.sc.add_server(data['--name'])
 
@@ -112,6 +120,10 @@ class PokeConfigManager:
 			self.sc.remove_server_function(data['--name'], 'copy')
 		else:
 			self.parser.help_screen()
+
+def run():
+	pcm = PokeConfigManager()
+	pcm.run(sys.argv[1:])	
 
 if __name__ == "__main__":
 	pcm = PokeConfigManager()

@@ -5,16 +5,7 @@ Module: ServerController
 ============
 Manages server configuration files
 
-contains:
-	add_server(name, url)
-
-	remove_server(name)
-
-	add_server_function(server_name, function_type, function_data)
-
-	remove_server_function(server_name, function_type)
-
-:copyright: (c) 2015 Katharina Sabel
+:copyright: (c) 2014-2015 Katharina Sabel
 :license: GPLv3 (See LICENSE)
 """
 
@@ -35,10 +26,13 @@ class ServerController:
 		if not os.path.exists(self.path):
 			os.makedirs(self.path, 0700)
 			print "New config directory created. Use 'poke-config-manager' to add servers now."
+			exit()
 
-	def add_server(self, name, url, port = 22):
+	def add_server(self, name, user, url, note, port = 22):
 		server = {}
 		server['name'] = name
+		server['user'] = user
+		server['note'] = note
 		server['url'] = url
 		server['port'] = port
 
@@ -85,7 +79,14 @@ class ServerController:
 		else:
 			print "Function didn't exist. Server file kept unchanged."
 
-	def show_server(self, server):
+	def __show_server(self, server):
 		tmp_file = self.path + server + __SERVER__
 		print pickle.load(open(tmp_file, 'rb'))
+
+	def fetch_servers(self):
+		servers = {}
+		for file in os.listdir(self.path):
+			if file.endswith(__SERVER__):
+				servers[file[0:-len(__SERVER__)]] = pickle.load(open(self.path + "" + file, 'rb'))
+		return servers
 
