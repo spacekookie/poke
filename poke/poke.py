@@ -1,4 +1,15 @@
-#!/usr/bin/python3.3
+#!/usr/bin/python
+
+"""
+Poke - SSH Connection Utility
+
+Application
+============
+
+:copyright: (c) 2015 Katharina Sabel
+:license: GPLv3 (See LICENSE)
+"""
+
 
 # Controller module imports
 from controllers import server_controller as sc
@@ -13,7 +24,7 @@ import sys
 
 # # Include local building dependency
 # except ImportError:
-sys.path.append('../../AdvOptParse/advoptparse/')
+# sys.path.append('../../AdvOptParse/advoptparse/')
 from advoptparse import parser as aop
 
 class Poke:
@@ -26,25 +37,26 @@ class Poke:
 		{
 			'connect':(self.pc.connect, 'Connect to remote servers via ssh'),
 			'copy':(self.pc.copy, 'Copy files to remote servers via scp'),
-			'push':(self.pc.push, 'Push commands directly to remote servers'),
-			'mount':(self.pc.push, 'Mount remote server via sshfs')
+			# 'push':(self.pc.push, 'Push commands directly to remote servers'),
+			'mount':(self.pc.push, 'Mount remote server (with config) via sshfs')
 		})
 
 		# Define Names and failsafe functions
 		self.p.set_container_name('poke')
 		self.p.set_fields_name('Servers')
 		self.p.register_failsafe(self.pc.error_handle)
+		self.p.set_hidden_subs(True)
 
 
 		# Define aliases for master fields
 		self.p.set_master_aliases('connect', ['c'])
 		self.p.set_master_aliases('copy', ['cp'])
-		self.p.set_master_aliases('push', ['p'])
+		# self.p.set_master_aliases('push', ['p'])
 		self.p.set_master_aliases('mount', ['m'])
 
 		self.p.set_master_fields('connect', True)
 		self.p.set_master_fields('copy', True)
-		self.p.set_master_fields('push', True)
+		# self.p.set_master_fields('push', True)
 		self.p.set_master_fields('mount', True)
 
 		self.p.add_suboptions('connect', {
@@ -70,4 +82,4 @@ class Poke:
 
 if __name__ == "__main__":
 	poke = Poke()
-	poke.run(sys.argv)
+	poke.run(sys.argv[1:])

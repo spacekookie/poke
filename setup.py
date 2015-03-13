@@ -6,7 +6,7 @@ setup(
     name='poke',
     version=__version__,
     url='http://github.com/SpaceKookie/poke/',
-    license='Apache Software License',
+    license='GNU General Public License v3.0',
     author='Katharina Sabel',
     author_email='katharina.sabel@2rsoftworks.de',
     description='SSH Connection Utility',
@@ -14,5 +14,8 @@ setup(
     packages=['poke'],
     include_package_data=True,
     platforms='any',
-    zip_safe=False
+    zip_safe=False,
+    install_requires=[
+          'advoptparse',
+      ],
 )
