@@ -32,7 +32,7 @@ class ServerController:
 		server = {}
 		server['name'] = name
 		server['user'] = user
-		server['note'] = note
+		server['note'] = note.replace('"', '')
 		server['url'] = url
 		server['port'] = port
 

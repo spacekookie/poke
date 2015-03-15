@@ -87,10 +87,17 @@ class PokeConfigManager:
 		# self.parser.help_screen()
 
 	def run(self, args):
+		new_args = []
+		for e in args:
+			if " " in e:
+				e = e.replace('=', '="')
+				e += '"'
+			new_args.append(e)
+
 		if args == []:
 			self.parser.help_screen()
 		else:
-			self.parser.parse(' '.join(args))
+			self.parser.parse(' '.join(new_args))
 
 	def handle(self, master, field, sub, data):
 		if master == "add-server":

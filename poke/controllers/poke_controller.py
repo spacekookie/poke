@@ -48,7 +48,35 @@ class PokeController:
 		pass
 
 	def copy(self, master, field, sub, data):
-		pass
+		if field == None:
+			print "You must specify a server first"
+			exit()
 
-	def push(self, master, field, sub, data):
-		pass
+		file = ''
+		target = '~/'
+		user = self.servers[field[0]]['user']
+
+		if '--file' in sub:
+			file += " " + data['--file']
+
+		if '--target' in sub:
+			target += data['--target']
+
+		assemble = "scp" + file + " " + user + "@" + field[1][0] + ":" + target
+		call(assemble, shell=True)
+
+	def mount(self, master, field, sub, data):
+
+		if 'mount' in self.servers[field[0]]:
+			serv = self.servers[field[0]]['mount']
+		else:
+			print "No mount target set up"
+			exit()
+
+		remote =  serv['remote']
+		local =  serv['local']
+		user = self.servers[field[0]]['user']
+		url = self.servers[field[0]]['url']
+
+		assemble = "sshfs " + user + "@" + url + ":" + remote + " " + local
+		call(assemble, shell=True)
