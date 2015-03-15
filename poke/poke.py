@@ -82,17 +82,17 @@ class Poke:
 		self.build_servers()
 
 	def run(self, args):
-		new_args = args
-		# for e in args:
-		# 	if " " in e:
-		# 		e = e.replace('=', '="')
-		# 		e += '"'
-		# 	new_args.append(e)
+		new_args = []
+		for e in args:
+			if " " in e:
+				e = e.replace('=', '="')
+				e += '"'
+			new_args.append(e)
 
 		if new_args == []:
 			self.parser.help_screen()
 		else:
-			self.parser.parse(new_args)
+			self.parser.parse(' '.join(new_args))
 
 	def build_servers(self):
 		# This will be coming...soon, ish?
@@ -116,4 +116,4 @@ def run():
 
 if __name__ == "__main__":
 	poke = Poke()
-	poke.run("mount lilian") #sys.argv[1:]
+	poke.run(sys.argv[1:])
