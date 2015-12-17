@@ -1,58 +1,51 @@
-# Poke SSH utility
-> *This project is no longer being developed or maintained. I keep it on here for the sake of it...it was my first python project after all. You never forget your first* :')
+# Poke SSH
 
----
+The most annoingly awesome ssh utility out there :)
 
-This is an SSH command-line utility tool designed to connect you to various ssh servers. 
+```bash
+$> ssh myuser@182.11.185.23 -D 3182 -X -p 1022
+...
 
-Instead of having to type server connections over and over or use 10 different aliases to do 10 different things you can now use Poke to set up as many SSH connections as you want and use them all with just one command.
+$> poke mkconf
 
-## How to install
-You have two options when it comes to installing. You can either stick to one of the snapshop releases that are thoroughly tested and shouldn't contain any bugs. Click on the "releases" tab and download the latest one. In this case you will have to compile the binary file yourself. After downloading and un-tarring the archive with ```tar -xjf poke-x.y.z.tar.bz2``` you run ```./make``` and then ```./make install``` in the 'Poke' directory that was created from the tarball.
+Enter a name for myuser@182.11.185.23 -D 3182 -X -p 1022
+> server1
+Done
+$> poke server1
+...
+```
 
-Alternatively you can head over to <a href="http://sourceforge.net/projects/poke-ssh-manager/">sourceforge</a> or look under the release section on this repository and download one of the pre-compiled binaries. They are however not even remotely as often updated as the source snapshots and will thus be more developed.
+And that's that :) it automatically creates ssh config entries from previous ssh sessions. When ambigous poke will ask you what session to choose from.
 
-ALTERNATIVELY if you want to help me develop Poke or you're just very masochistic you can download a non-stable snapshot. Non-stable snapshots are mid-release cycle and under heavy development. They will contains bugs and errors. Use at your own disgression. Feedback from those versions can however be very useful to me.
+### But that is not all
 
-## How to use
-After installing poke to your system you can type ```poke``` to list all configured servers (more to that below). Then simply connect to one of the servers by using it's short OR longhandle as a parameter e.g. ```poke --work``` or ``poke -p```.
-There are several settings that can be overwritten including the default SSH-Key that will be used for a session and the XTerm configuration for a session.
+OMG whaaaat? Yea, Poke can do even more.
 
-+ ```poke --work -K default``` will connect to the 'work' server using the 'default' key from the keys.cfg file.
-+ ```poke --jane -X``` will connect to the 'jane' server overwriting the XTerm setting to "true" from whatever it was before. You will be notified if it actually changed.
+Have you ever gone to a server and not had your `.vimrc` and it completely drove you insane?
 
-## How to set up
-When running Poke for the first time the tool will create a few configuration files at ```~/.poke/```. One is a global configuration file that contains the config and user path as well as version and OS information.
+Define files in the `.pokerc` located in `.config/`
 
-In addition to that two more configuration files are created. One called ```~/.poke/servers.cfg*``` and the other called ```~/.poke/keys.cfg```
+```
+pre ~/.config/fish/config.fish
+pre ~/.vimrc
+pre ~/bin/awesome_sauce.sh ~ myscript.sh
+```
 
-The server configuration uses a standard configuration layout:
+Then when you connect to a server from your ssh config via poke it will execute the following:
 
-| Section  | Effect |
-| ------------- | ------------- |
-| [Section Name]  | Has no effect on functionality. Only for your convenience |
-| Name (Optional) | Nickname for your server. Will be displayed in the server list |
-| ShortHand  | Single character to address the section. Used to address the server. |
-| LongHand (Optional) | String to address the section. Used to address the server. |
-| URL  | Server address as IP or Domain.  |
-| User  | SSH username on the remote machine.  |
-| XDef (Optional)  | Boolean to indicate default ```-X``` setting on SSH session.  |
-| Key (Optional) | Specifies a key in the keys.cfg file to use instead of a password authentication  |
+```bash
+$> poke server1
+$> scp ~/.config/fish/config.fish server1:~/.config/fish/config.fish 
+$> scp ~/.vimrc server1:~/.vimrc
+$> scp ~/bin/awesome_sauce.sh ~/bin/myscript.sh
+$> ssh server1
+...
+```
 
-The ```~/.poke/keys.cfg``` has a simmilar layout to add keys. SSH keys are stored at ```~/.ssh``` by default however the location can be overwritten in the global configuration file. For examples of that check the ```samples/global``` file
+Naaaah? Naaaaah? C'maaaaaaan!
 
-The key configuration file acts as follows:
-
-| Section  | Effect |
-| ------------- | ------------- |
-| [Section Name]  | Has no effect on functionality. Only for your convenience |
-| ID | ID-String for the SSH Key|
-| ShortID  | Single character to address the key |
-| Path | Name of the actual key-file in your ssh directory. Note that the path can be changed in the Poke configuration. Check the sample section for details. |
-| Access (Optional) (**Experiental**)  | Determines the access level of the user on the remote server to determine before-hand if an opration can be run or not. 0 is root, 1 is the default user. Add additional values as you need them.  |
-
-For more examples on how to configure your keys check the ```samples/keys.cfg```file
-
-
-
-If you have issues using Poke check the Issue Tracker on this repository. If none exists already, please create one so I can get back to you.
+Also you can disable that functionality by passing in a parameter to poke:
+```
+$> poke - server1
+...
+```
