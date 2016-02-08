@@ -2,33 +2,38 @@
 
 """___
 \  \ 
- \  \ Poke 
- /  /     ssh connection utility
+ \  \  Poke 
+ /  /      ssh connection utility
 /__/
 
 Usage:
-  poke (--mkconf | -c)
-  poke <server>
-  poke -q <server>
+  poke <server> <ssh command>
+  poke (add | a) <server>
+  poke rm <server>
+
+  poke [-q] <server> [ssh options]
+  poke (list | ls)
+
   poke (-h | --help)
-  poke --version
+  poke (-v | --version)
 
 Options:
-  -h --help     Show this screen.
+  -h, --help    Show this screen.
   --version     Show version.
+
+  add           Add a new entry to your ssh config from your shell history
+  ls            Show all targets from ssh config
   <server>      Connect to that server from your ssh config
   -q <server>   Connect to that server without copying files from .pokerc
-  --mkconf -c   Add a new entry to your ssh config from your shell history
-
 """
+
 from docopt import docopt
-
-# Make sure we import all the things we need to namespaces we like
 from helpers import ConfigHelper, ShellHelper, ConnectHelper, CmdParser
+from version import __version__, __verbose__
 
+from os import popen, path
 
-# Import the version just because YOLO
-from version import __version__
+__sshconf__ = '~/.ssh/config'
 
 class Poker:
 
@@ -39,8 +44,37 @@ class Poker:
     self.conect = ConnectHelper()
 
   # Call a function to 
-  def create_entry(self, name, target_data):
-    pass
+  def create_entry(self, name, td):
+    entry = '\n## Automatically generated with poke\n'
+    entry += 'Host %s\n' % name
+
+    for k, v in td.items():
+      if __verbose__: print("Adding %s to config entry" % k)
+      entry += "  " + str(k) + " " + str(v) + "\n"
+
+    print("Adding new entry to config: \n\n%s" % entry)
+
+    with open(path.expanduser(__sshconf__), "a") as conf:
+      conf.write(entry)
+
+  def list_entries(self):
+    val = popen("cat %s | grep -v '#'" % path.expanduser(__sshconf__))
+    entries = {}
+
+    current = ''
+    buf = []
+    ''' 
+    Host jabba
+    HostName jabba.dynalias.net
+    User ffwi
+    Port 2222
+    IdentitiesOnly yes
+    IdentityFile ~/.ssh/id_rsa
+    '''
+    for line in val.readlines():
+      if line.startswith('Host'):
+        if buf != {}: entries[buf['name']] = buf:
+          current = line[5:]
 
   def remove_entry(self, name):
     pass
@@ -49,6 +83,8 @@ class Poker:
     pass
 
 if __name__ == '__main__':
-  arguments = docopt(__doc__, version='0.7.0')
-  print(arguments)
-  # p = Poker()
+  arguments = docopt(__doc__, version=__version__)
+  # print(arguments)
+  p = Poker()
+  p.list_entries()
+  # p.create_entry('Test', {'HostName': '192.168.2.197', 'User': 'spacekookie', 'Port': 2222})
