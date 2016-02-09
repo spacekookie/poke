@@ -1,10 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-"""___
-\  \ 
- \  \  Poke 
- /  /      ssh connection utility
-/__/
+"""___  ___
+\  \ \  \    
+ \  \ \  \    Poke
+ /  / /  /        SSH Connection Utility
+/__/ /__/    
+
 
 Usage:
   poke <server> <ssh command>
@@ -29,11 +30,9 @@ Options:
 
 from docopt import docopt
 from helpers import ConfigHelper, ShellHelper, ConnectHelper, CmdParser
-from version import __version__, __verbose__
+from consts import __version__, __verbose__
 
 from os import popen, path
-
-__sshconf__ = '~/.ssh/config'
 
 class Poker:
 
@@ -50,7 +49,7 @@ class Poker:
 
     for k, v in td.items():
       if __verbose__: print("Adding %s to config entry" % k)
-      entry += "  " + str(k) + " " + str(v) + "\n"
+      entry += "    " + str(k) + " " + str(v) + "\n"
 
     print("Adding new entry to config: \n\n%s" % entry)
 
@@ -58,23 +57,21 @@ class Poker:
       conf.write(entry)
 
   def list_entries(self):
-    val = popen("cat %s | grep -v '#'" % path.expanduser(__sshconf__))
-    entries = {}
+    e = self.config.parse()
+    hl = len(max(e, key=len)) + 4
 
-    current = ''
-    buf = []
-    ''' 
-    Host jabba
-    HostName jabba.dynalias.net
-    User ffwi
-    Port 2222
-    IdentitiesOnly yes
-    IdentityFile ~/.ssh/id_rsa
-    '''
-    for line in val.readlines():
-      if line.startswith('Host'):
-        if buf != {}: entries[buf['name']] = buf:
-          current = line[5:]
+    if __verbose__: "The longest key is %d" % hl
+    print("Available Hosts:")
+
+    # print "Who lives in a Pineapple under the sea? \n#{name}."
+    for k, v in sorted(e.items()):
+      if 'url' in v: print(" - %-*s%s" % (hl, k, v['url']))
+
+      # print("{}\t${}".format(k, v['name']))
+      # print("#{k} is a host")
+
+      # print("%(k)\t%(v['url']):%(v['port'])" % locals())
+
 
   def remove_entry(self, name):
     pass
@@ -83,8 +80,8 @@ class Poker:
     pass
 
 if __name__ == '__main__':
-  arguments = docopt(__doc__, version=__version__)
+  # arguments = docopt(__doc__, version=__version__)
   # print(arguments)
   p = Poker()
   p.list_entries()
-  # p.create_entry('Test', {'HostName': '192.168.2.197', 'User': 'spacekookie', 'Port': 2222})
+  #p.create_entry('Test', {'HostName': '192.168.2.197', 'User': 'spacekookie', 'Port': 2222})
