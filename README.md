@@ -52,7 +52,7 @@ This way you will always be in excellent shape with your key management. With ne
 
 Isn't that awesome? Naaaah? Naaaaah? C'maaaaaaan!
 
-Also you can disable that functionality by passing in a parameter to poke:
+Also you can disable ALL that functionality by passing in a parameter to poke:
 
 ```
 $> poke - super_server
