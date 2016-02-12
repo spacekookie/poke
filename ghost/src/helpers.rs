@@ -3,7 +3,7 @@ struct ConfigHelper {
 }
 
 impl ConfigHelper {
-  fn blaaa() {
+  fn parseConfig() {
     
   }
 }

@@ -1,31 +1,55 @@
-Poke
-====
+# Ghost in the Shell
 
-The most annoingly awesome ssh utility in the universe. Contains 25% more ssh than the competition. 
+`Ghost in the Shell` is the most anoyingly, most powerful and most extendable [ssh][ssh] host and key manager written in [rust][rzstlang]. It contains 25% more SSH than the leading competitor.
 
-**At this time only `fish` is properly supported. Please check back later for more console support - or open a ticket for your favourite console. Thanks!**
+## Usage
 
-Manage ssh config
------------------
+Hosts are stored in your ~/.ssh/config file and can be added in one of two ways. Explicitly:
 
-Managing large ssh configs is annoying. Fiddling around with ssh parameters and then creating a config entry from that is time consuming and boring. And there really should be a tool to automate the process. Now there is!
-
-```bash
-$> ssh myuser@182.11.185.23 -D 3182 -X -p 1022
-...
-poke mkcfg super_server
+```console
+user@machine ~ $> ghost my_server myuser@182.11.185.23 -D 3182 -X -p 1022
 ```
 
-Poke will look through your history and take the last successful (and valid) ssh command and create a config from it. Completely automatic. It will even let you know if it thinks the entry already exists (in some shape or form).
+or implicitly by crawling through your shell history:
 
-And removing an automatically generated config entry is as easy as pie. 
-
-```bash
-poke rm super_server
+```console
+user@machine ~ $> ssh myuser@182.11.185.23 -D 3182 -X -p 1022
+user@machine ~ $> ghost add my_server
 ```
 
-Take your world with you
-------------------------
+Some other useful commands
+
+```console
+user@machine ~ $> ghost ls
+* super_server
+* uni3
+* jane.nas
+
+user@machine ~ $> ghost rm super_server
+
+user@machine ~ $> ghost jane.nas
+Host key fingerprint is f9:63:1a:22:9f:d4:00:11:1f:bc:de:fa:dc:ec:2b:47
++----[SHA 256]----+
+|                 |
+|                 |
+|                 |
+|      .   .      |
+|      . o  .     |
+|       . S  E    |
+|      .   * .    |
+|       .= +X.    |
+|        .=EBO.   |
++-----------------+
+
+Last login: Sat Nov  18 00:00:00 1995 from 0.0.0.0
+guest@jane.nas ~ $>
+```
+
+## Now in depth
+
+For people who actually care (this is all in alpha anyways :) )
+
+#### Take your world with you
 
 We all have special setups and shortcuts and scripts and...
 And then we log into a client machine just to realise that their .vimrc is non-existent and by default `ll` is mapped to `cowsay "The fuck?"`. Now there is a solution to this!
@@ -40,8 +64,7 @@ $> poke super_server
 
 And after you're done all the temporary stuff will be removed from the server again...as if you were never there!
 
-Automatic keys
---------------
+#### Automatic keys
 
 Yes...we should all have unique keys for every server. And yes, we should totally change them from time to time. And no, nobody *ever* does so. Because it's time consuming and boring. Until now!
 
@@ -57,3 +80,6 @@ Also you can disable ALL that functionality by passing in a parameter to poke:
 ```
 $> poke - super_server
 ```
+
+[rustlang]: http://rustlang.org/
+[ssh]: https://wikipedia.org/wiki/Secure_Shell
