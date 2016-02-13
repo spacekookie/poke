@@ -1,6 +1,6 @@
 # Ghost in the Shell (ghost)
 
-`Ghost in the Shell` is the most anoyingly, most powerful and most extendable [ssh][ssh] host and key manager written in [rust][rzstlang]. It contains 25% more SSH than the leading competitor.
+`Ghost in the Shell` is the most anoyingly, most powerful and most extendable [ssh][ssh] host and key manager written in [rust][rustlang]. It contains 25% more SSH than the leading competitor.
 
 ## Usage
 
