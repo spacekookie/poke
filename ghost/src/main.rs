@@ -39,6 +39,8 @@ extern crate docopt;
 
 use docopt::Docopt;
 
+const VERSION: &'static str = "0.7.0";
+
 const USAGE: &'static str = "Ghost in the Shell
 
 Usage:
@@ -79,8 +81,9 @@ struct Args {
 }
 
 fn main() {
-    let args: Args = Docopt::new(USAGE)
-                            .and_then( |d| d.decode() )
-                            .unwrap_or_else( |e| e.exit() );
-    println!("{:?}", args);
+  let version = VERSION.to_owned();
+  let args = Docopt::new(USAGE).and_then(|dopt| dopt.version(Some(version)).parse()).unwrap_or_else(|e| e.exit());
+
+  println!("Some arguments:");
+  println!("  Speed: {}", args.get_str("--speed"));
 }
