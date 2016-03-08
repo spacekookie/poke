@@ -1,17 +1,24 @@
+// An attribute to hide warnings for unused code.
+#![allow(dead_code)]
+
+mod helpers;
+
+/* Required crates (namespaces) */
 extern crate rustc_serialize;
 extern crate docopt;
+extern crate core;
 
-/** External imports */
+/* File handling */
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::error::Error;
-use std::path::Path;
 use std::fs::File;
 
+use std::env;
+
+/* Utilities */
+use std::process::Command;
 use docopt::Docopt;
-
-/* Internal imports */
-
 
 /* Docopt definitions */
 const VERSION: &'static str = "0.7.0";
@@ -41,7 +48,7 @@ struct Args {
     flag_rm: bool,
     flag_list: bool,
 
-    arg_server: Vec<String>,
+    arg_server: String,
     arg_sshcommand: Vec<String>,
 }
 
@@ -56,7 +63,7 @@ impl<'a> ConfigHelper<'a> {
         }
     }
 
-    fn parseConfig(&self) {
+    fn parse_config(&self) {
         /* The `description` method of `io::Error` returns a string that describes the error */
         let file = match File::open(self.ssh_path) {
           Err(why) => panic!("couldn't open {}: {}", self.ssh_path, Error::description(&why)),
@@ -85,10 +92,24 @@ fn main() {
     // let args = Docopt::new(USAGE).and_then( |dopt| dopt.version(Some(version)).parse() ).unwrap_or_else( |e| e.exit() );
     let args: Args = Docopt::new(USAGE).and_then(|d| d.version(Some(version)).decode()).unwrap_or_else(|e| e.exit());
 
+    match env::home_dir() {
+      Some(ref p) => println!("Home: {}", p.display()),
+      None => println!("Impossible to get your home dir!")
+    }
+
     if args.flag_list {
       let cfg = ConfigHelper::new("/home/spacekookie/.ssh/config");
-      cfg.parseConfig();
-    } 
+      cfg.parse_config();
+    } else if !args.arg_server.is_empty()  {
+
+      if args.flag_q {
+
+      } else {
+        println!("Connecting via ssh to {}", args.arg_server);
+        let output = Command::new("ssh").arg(args.arg_server).output()
+                              .unwrap_or_else( |e| { panic!("failed to execute process: {}", e) } );
+      }
+    }
 }
 
 /*    println!("\nSome values:");
