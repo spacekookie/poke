@@ -1,8 +1,0 @@
-[package]
-name = "poke"
-version = "0.7.0"
-authors = ["Katharina Sabel <sabel.katharina@gmail.com>"]
-
-[dependencies]
-docopt = "0.6"
-rustc-serialize = "0.3"

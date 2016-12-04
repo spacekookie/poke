@@ -1,35 +1,36 @@
-![Reedb Logo](https://raw.githubusercontent.com/spacekookie/ghost-in-the-shell/master/shell_sc_313.png)
-# Ghost in the Shell (ghost)
+![Poke Logo](https://raw.githubusercontent.com/spacekookie/ssh-poke/master/shell_sc_313.png)
+
+# Poke
 
 
-`Ghost in the Shell` is the most anoyingly, most powerful and most extendable [ssh][ssh] host and key manager written in [rust][rustlang]. It contains 25% more SSH than the leading competitor.
+`poke` is the most anoyingly awesome, most powerful and most extendable [ssh][ssh] host and key manager written in C. It contains 25% more SSH than the leading competitor.
 
 ## Usage
 
 Hosts are stored in your ~/.ssh/config file and can be added in one of two ways. Explicitly:
 
 ```console
-user@machine ~ $> ghost my_server myuser@182.11.185.23 -D 3182 -X -p 1022
+user@machine ~ $> poke my_server myuser@182.11.185.23 -D 3182 -X -p 1022
 ```
 
 or implicitly by crawling through your shell history:
 
 ```console
 user@machine ~ $> ssh myuser@182.11.185.23 -D 3182 -X -p 1022
-user@machine ~ $> ghost add my_server
+user@machine ~ $> poke add my_server
 ```
 
 Some other useful commands
 
 ```console
-user@machine ~ $> ghost ls
+user@machine ~ $> poke ls
 * super_server
 * uni3
 * jane.nas
 
-user@machine ~ $> ghost rm super_server
+user@machine ~ $> poke rm super_server
 
-user@machine ~ $> ghost jane.nas
+user@machine ~ $> poke jane.nas
 Host key fingerprint is f9:63:1a:22:9f:d4:00:11:1f:bc:de:fa:dc:ec:2b:47
 +----[SHA 256]----+
 |                 |
