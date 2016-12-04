@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #define TEST_PATH "/home/spacekookie/.ssh/config"
 #define STR_STARTS(src, check) strncmp(src, check, strlen(check))
@@ -67,6 +68,11 @@ void print_host_struct(pk_parse_hst *host)
 
 int main(void)
 {
+
+    struct timespec tstart={0,0}, tend={0,0};
+    clock_gettime(CLOCK_MONOTONIC, &tstart);
+
+
     FILE *f = fopen(TEST_PATH, "r");
     fseek(f, 0, SEEK_END);
     size_t cfg_size = (size_t) ftell(f);
@@ -151,6 +157,11 @@ int main(void)
         if(strlen(hosts[i].hostname) == 0) continue;
         print_host_struct(&hosts[i]);
     }
+
+    clock_gettime(CLOCK_MONOTONIC, &tend);
+    printf("Took about %.5f seconds\n",
+           ((double)tend.tv_sec + 1.0e-9*tend.tv_nsec) -
+           ((double)tstart.tv_sec + 1.0e-9*tstart.tv_nsec));
 
     return 0;
 
