@@ -41,6 +41,27 @@ void pk_string_parse(const char *src, char *payload, size_t payload_len, const c
 }
 
 
+void print_host_struct(pk_parse_hst *host)
+{
+    printf("=== Host: %s ===\n", host->host_id);
+    printf("\tHostName: %s\n", host->hostname);
+    printf("\tUser: %s\n", host->username);
+    printf("\tPort: %s\n", host->port);
+    printf("\tID Only: %s\n", host->id_only);
+    printf("\tID File: %s\n", host->id_file);
+
+    size_t host_len = strlen(host->host_id) + 9 /* Beginning */ + 4 /* End */;
+    int i;
+    for(i = 0; i <= host_len; i++) {
+        printf("=");
+    }
+
+    /* Then just add new lines */
+    printf("\n\n");
+
+}
+
+
 int main(void)
 {
     char str[] ="Host lonelyrobot\n"
@@ -97,6 +118,8 @@ int main(void)
     }
 
     printf("Finishing up...looking at data\n");
+
+    print_host_struct(&hosts[0]);
 
     return 0;
 
