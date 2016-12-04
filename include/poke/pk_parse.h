@@ -17,8 +17,10 @@
 
 /**************************************************************************************/
 
-#include <poke/pk.h>
+#ifndef POKE_PK_PARSE_H
+#define POKE_PK_PARSE_H
 
+#include "pk.h"
 
 typedef struct pk_parse_hst
 {
@@ -26,7 +28,7 @@ typedef struct pk_parse_hst
   char  username[128];
   char  keyfile[128];
   int   port;
-}
+} pk_parse_hst;
 
 
 typedef struct pk_parse_ctx
@@ -46,7 +48,7 @@ typedef struct pk_parse_ctx
   long          pk_update_t;
   char          *pk_key_t;
   int           pk_key_len;
-};
+} pk_parse_ctx;
 
 
 /** Prepare a parser context for a config file */
@@ -63,3 +65,5 @@ int pk_parse_query(pk_parse_ctx *ctx, pk_parse_hst **data, const char *hostname)
 
 /** Free parser context from memory completely */
 int pk_parse_free(pk_parse_ctx *ctx);
+
+#endif
