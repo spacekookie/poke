@@ -32,6 +32,10 @@ typedef struct pk_parse_hst
     char    id_file[128];
 
     char    port[128];
+
+    /* Some poke specific metadata */
+    char    pk_updated[128];
+    char    pk_blacklist[128];
 } pk_parse_hst;
 
 

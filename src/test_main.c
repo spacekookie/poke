@@ -49,6 +49,9 @@ void print_host_struct(pk_parse_hst *host)
     printf("\tPort: %s\n", host->port);
     printf("\tID Only: %s\n", host->id_only);
     printf("\tID File: %s\n", host->id_file);
+    printf("\n");
+    printf("\tPK Updated: %s\n", host->pk_updated);
+    printf("\tPK Blacklisted: %s\n", host->pk_blacklist);
 
     size_t host_len = strlen(host->host_id) + 9 /* Beginning */ + 4 /* End */;
     int i;
@@ -66,6 +69,7 @@ int main(void)
 {
     char str[] ="Host lonelyrobot\n"
                 "#poke pk_updated 2382094332\n"
+                "#poke pk_blacklisted on\n"
                 "    User        spacekookie\n"
                 "    HostName    5.45.106.146\n"
                 "    IdentitiesOnly  no\n"
@@ -112,8 +116,23 @@ int main(void)
         PK_DATA_WRITER(trimmed, hosts[host_ctr].username, USER)
         PK_DATA_WRITER(trimmed, hosts[host_ctr].port, PORT)
 
-        end_value_write:
+#define PK_EXT          "#poke"
+#define PK_UPDATED      "pk_updated"
+#define PK_BLACKLIST    "pk_blacklisted"
 
+        /** Check for our own #poke extentions */
+        if(STR_STARTS(trimmed, PK_EXT) == 0) {
+
+            char poke_extention[128];
+            memset(poke_extention, 0, sizeof(char) * 128);
+            strcpy(poke_extention, trimmed + strlen(PK_EXT));
+
+            PK_DATA_WRITER(poke_extention, hosts[host_ctr].pk_updated, PK_UPDATED);
+            PK_DATA_WRITER(poke_extention, hosts[host_ctr].pk_blacklist, PK_BLACKLIST);
+        }
+
+        /* A label at the end to avoid any re-assignments through double if statements */
+        end_value_write:
         pch = strtok (NULL, "\n");
     }
 
