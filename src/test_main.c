@@ -67,23 +67,23 @@ void print_host_struct(pk_parse_hst *host)
 
 int main(void)
 {
-    char str[] ="Host lonelyrobot\n"
-                "#poke pk_updated 2382094332\n"
-                "#poke pk_blacklisted on\n"
-                "    User        spacekookie\n"
-                "    HostName    5.45.106.146\n"
-                "    IdentitiesOnly  no\n"
-                "    IdentityFile    ~/.ssh/p_rsa\n"
-                "    Port        22";
+    FILE *f = fopen(TEST_PATH, "r");
+    fseek(f, 0, SEEK_END);
+    size_t cfg_size = (size_t) ftell(f);
+    fseek(f, 0, SEEK_SET);  //same as rewind(f);
 
-    char * pch;
+    char str[cfg_size + 1];
+    memset(str, 0, cfg_size + 1);
+    fread(str, cfg_size, 1, f);
+    fclose(f);
+
+    char *pch;
     int ctr = 0;
-
     printf ("Splitting origin string into token stream...\n\n");
 
-    int host_ctr = 0;
-    pk_parse_hst hosts[2];
-    memset(hosts, 0, sizeof(pk_parse_hst) * 2);
+    int host_ctr = -1;
+    pk_parse_hst hosts[128];
+    memset(hosts, 0, sizeof(pk_parse_hst) * 128);
 
 #define HOST_NAME   "HostName"
 #define HOST_ID     "Host"
@@ -109,6 +109,14 @@ int main(void)
 
         /* These two need to be in this order to avoid "Host" vs "HostName" conflicts */
         PK_DATA_WRITER(trimmed, hosts[host_ctr].hostname, HOST_NAME)
+
+        if(STR_STARTS(trimmed, HOST_ID) == 0) {
+            host_ctr++;
+            strcpy(hosts[host_ctr].pk_updated, "-1");
+            strcpy(hosts[host_ctr].pk_blacklist, "no");
+            strcpy(hosts[host_ctr].port, "22");
+            strcpy(hosts[host_ctr].id_only, "no");
+        }
         PK_DATA_WRITER(trimmed, hosts[host_ctr].host_id, HOST_ID)
 
         PK_DATA_WRITER(trimmed, hosts[host_ctr].id_only, ID_ONLY)
@@ -138,7 +146,11 @@ int main(void)
 
     printf("Finishing up...looking at data\n");
 
-    print_host_struct(&hosts[0]);
+    int i;
+    for(i = 0; i < 128; i++) {
+        if(strlen(hosts[i].hostname) == 0) continue;
+        print_host_struct(&hosts[i]);
+    }
 
     return 0;
 
