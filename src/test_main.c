@@ -8,6 +8,7 @@
 #define TEST_PATH "/home/spacekookie/.ssh/config"
 #define STR_STARTS(src, check) strncmp(src, check, strlen(check))
 
+
 void pk_string_trim(char *src, char *dst)
 {
     int s, d=0;
@@ -20,15 +21,35 @@ void pk_string_trim(char *src, char *dst)
 }
 
 
+/**
+ * A simple utility function which extracts the value out of a key-value config pair.
+ * It does so by copying the data into a payload string, without modifying the original
+ * data provided.
+ *
+ * @param src
+ * @param payload
+ * @param payload_len
+ * @param key
+ */
+void pk_string_parse(const char *src, char *payload, size_t payload_len, const char *key)
+{
+    /* First make sure memory is nice and clean */
+    memset(payload, 0, payload_len);
+
+    /* Ignore the <key> in the beginning of our string */
+    strcpy(payload, src + strlen(key));
+}
+
+
 int main(void)
 {
     char str[] ="Host lonelyrobot\n"
-            "#poke pk_updated 2382094332\n"
-            "    User        spacekookie\n"
-            "    HostName    www.lonelyrobot.io\n"
-            "    IdentitiesOnly  no\n"
-            "    IdentityFile    ~/.ssh/p_rsa\n"
-            "    Port        22";
+                "#poke pk_updated 2382094332\n"
+                "    User        spacekookie\n"
+                "    HostName    5.45.106.146\n"
+                "    IdentitiesOnly  no\n"
+                "    IdentityFile    ~/.ssh/p_rsa\n"
+                "    Port        22";
 
     char * pch;
     int ctr = 0;
@@ -39,25 +60,44 @@ int main(void)
     pk_parse_hst hosts[2];
     memset(hosts, 0, sizeof(pk_parse_hst) * 2);
 
+#define HOST_NAME   "HostName"
+#define HOST_ID     "Host"
+#define PORT        "Port"
+#define USER        "User"
+#define ID_ONLY     "IdentitiesOnly"
+#define ID_FILE     "IdentityFile"
+
+#define PK_DATA_WRITER(data, target, pattern) \
+    { \
+    if(STR_STARTS(data, pattern) == 0) { \
+        pk_string_parse(data, target, 128, pattern); \
+        /* printf("'%s' now: %s\n", #pattern, target); */ \
+        goto end_value_write; \
+    } }
+
     pch = strtok (str,"\n");
     while (pch != NULL) {
+        // printf ("%d > %s\n", ctr++, pch);
+
         char trimmed[strlen(pch) + 1];
         pk_string_trim(pch, trimmed);
 
-        if(STR_STARTS(trimmed, "Host") == 0) {
-            char hostname[strlen(trimmed)];
-            memset(hostname, 0, strlen(trimmed));
+        /* These two need to be in this order to avoid "Host" vs "HostName" conflicts */
+        PK_DATA_WRITER(trimmed, hosts[host_ctr].hostname, HOST_NAME)
+        PK_DATA_WRITER(trimmed, hosts[host_ctr].host_id, HOST_ID)
 
-            /* Ignore the "Host" in the beginning of our string */
-            strcpy(hostname, trimmed + 4);
+        PK_DATA_WRITER(trimmed, hosts[host_ctr].id_only, ID_ONLY)
+        PK_DATA_WRITER(trimmed, hosts[host_ctr].id_file, ID_FILE)
+        PK_DATA_WRITER(trimmed, hosts[host_ctr].username, USER)
+        PK_DATA_WRITER(trimmed, hosts[host_ctr].port, PORT)
 
-            strcpy(hosts[host_ctr].hostname, hostname);
-            printf("Selected host name: '%s'\n\n", hosts[host_ctr].hostname);
-        }
+        end_value_write:
 
-        printf ("%d > %s\n", ctr++, pch);
         pch = strtok (NULL, "\n");
     }
+
+    printf("Finishing up...looking at data\n");
+
     return 0;
 
     printf("=== Welcome to poke ===\n");

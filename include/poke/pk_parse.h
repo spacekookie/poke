@@ -24,30 +24,34 @@
 
 typedef struct pk_parse_hst
 {
-  char  hostname[128];
-  char  username[128];
-  char  keyfile[128];
-  int   port;
+    char    host_id[128];
+    char    hostname[128];
+    char    username[128];
+
+    char    id_only[128];
+    char    id_file[128];
+
+    char    port[128];
 } pk_parse_hst;
 
 
 typedef struct pk_parse_ctx
 {
-  char          *ssh_path;
-  char          *ssh_config;
+    char          *ssh_path;
+    char          *ssh_config;
 
-  char          *raw_data;
-  pk_parse_hst  **hosts;
-  int           hsize, hused;
+    char          *raw_data;
+    pk_parse_hst  **hosts;
+    int           hsize, hused;
 
-  /* 
-   * Store some metadata about the cfg.
-   * Defined as "#poke (...)"
-   */
-  int           pk_version;
-  long          pk_update_t;
-  char          *pk_key_t;
-  int           pk_key_len;
+    /*
+    * Store some metadata about the cfg.
+    * Defined as "#poke (...)"
+    */
+    int           pk_version;
+    long          pk_update_t;
+    char          *pk_key_t;
+    int           pk_key_len;
 } pk_parse_ctx;
 
 
