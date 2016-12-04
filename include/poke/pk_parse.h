@@ -31,12 +31,21 @@ typedef struct pk_parse_hst
 
 typedef struct pk_parse_ctx
 {
-  char  *ssh_path;
-  char  *ssh_config;
+  char          *ssh_path;
+  char          *ssh_config;
 
   char          *raw_data;
   pk_parse_hst  **hosts;
   int           hsize, hused;
+
+  /* 
+   * Store some metadata about the cfg.
+   * Defined as "#poke (...)"
+   */
+  int           pk_version;
+  long          pk_update_t;
+  char          *pk_key_t;
+  int           pk_key_len;
 };
 
 
