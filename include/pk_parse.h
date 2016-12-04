@@ -36,6 +36,7 @@ typedef struct pk_parse_ctx
 
   char          *raw_data;
   pk_parse_hst  **hosts;
+  int           hsize, hused;
 };
 
 
