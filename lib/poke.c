@@ -1,4 +1,4 @@
-#include <poke/poke.h>
+#include <poke/pk.h>
 #include <time.h>
 
 #define CHECK_CTX \
@@ -69,4 +69,22 @@ int pk_trgt_free(pk_trgt_ctx *ctx)
   free(ctx);
 
   return PK_ERR_SUCCESS;
+}
+
+/** Initialises a context with everything that is required for it to work **/
+int pk_dm_init(pk_dm_ctx *ctx, const char *cfg_pth)
+{
+
+}
+
+/** Queries target information from the known hosts. Can replace ssh **/
+int pk_dm_query(pk_dm_ctx *ctx, pk_trgt_ctx **trgt, const char *host)
+{
+
+}
+
+/** Safely frees a context from memory **/
+int pk_dm_free(pk_dm_ctx *ctx)
+{
+
 }
