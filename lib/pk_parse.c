@@ -1,7 +1,8 @@
-#include <poke/pk_parse.h>
-#include <stdio.h>
+#include <poke/pk.h>
+
+#include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
+#include <stdio.h>
 
 #define CHECK_CTX if(ctx == NULL) return PK_ERR_INVALID_PARAMS;
 #define BUFFER_SIZE 32768
@@ -11,7 +12,6 @@
     { \
     if(PK_STR_STARTS(data, pattern) == 0) { \
         pk_string_parse(data, target, 128, pattern); \
-        /* printf("'%s' now: %s\n", #pattern, target); */ \
         goto end_value_write; \
     } }
 
@@ -37,10 +37,9 @@ int pk_parse_init(pk_parse_ctx *ctx, const char *path)
 
 
 /** Load the config to RAM and store a series of tokens to work on */
-int pk_parse_load(pk_parse_ctx *ctx)
+int pk_parse_load(pk_parse_ctx *ctx, pk_config **cfg)
 {
     CHECK_CTX
-
 
     /* Open the file and seek through it for length */
     FILE *f = fopen(ctx->ssh_path, "r");
@@ -49,20 +48,20 @@ int pk_parse_load(pk_parse_ctx *ctx)
     fseek(f, 0, SEEK_SET);
 
     /* Create a buffer of the correct size */
-    char buffer[cfg_size + 1];
-    memset(buffer, 0, cfg_size + 1);
-    fread(buffer, cfg_size, 1, f);
+    char cfg_buf[cfg_size + 1];
+    memset(cfg_buf, 0, cfg_size + 1);
+    fread(cfg_buf, cfg_size, 1, f);
     fclose(f);
 
     /* Copy the raw data into a struct buffer for future reference */
     ctx->raw_data = (char*) malloc(sizeof(char) * cfg_size);
     if(ctx->raw_data == NULL) return PK_ERR_MALLOC_FAILED;
-    strcpy(ctx->raw_data, buffer);
+    strcpy(ctx->raw_data, cfg_buf);
 
     /* Scan through the config first once to find host count */
     char skim_buf[cfg_size + 1];
     memset(skim_buf, 0, cfg_size + 1);
-    memcpy(skim_buf, buffer, cfg_size + 1);
+    memcpy(skim_buf, cfg_buf, cfg_size + 1);
 
     size_t host_n = 0;
     char *temp;
@@ -86,12 +85,22 @@ int pk_parse_load(pk_parse_ctx *ctx)
 
     /* Create some stack variables for future parsing */
     const char delims[] = "\n";
-    pk_parse_hst hosts[host_n];
-    int host_ctr = -1;
+    pk_config buffer;
     char *pch;
 
+    /* Buffer for current snippet (block or client) */
+    union pk_cfg_snippet *current = NULL;
+
+    enum pk_parse_type { BLOCK, CLIENT };
+    enum pk_parse_type curr_t = CLIENT;
+
+    size_t snippets_size = sizeof(union pk_cfg_snippet) * host_n * 2;
+    buffer.snippets = (union pk_cfg_snippet**) malloc(snippets_size);
+    memset(buffer.snippets, 0, snippets_size);
+    buffer.snip_max = snippets_size;
+
     /* Start parsing - first token */
-    pch = strtok (buffer, delims);
+    pch = strtok (cfg_buf, delims);
 
     /* Then iterate through the token list */
     while(pch != NULL) {
@@ -101,27 +110,57 @@ int pk_parse_load(pk_parse_ctx *ctx)
         pk_string_trim(pch, trimmed);
 
         /* These two need to be in this order to avoid "Host" vs "HostName" conflicts */
-        PK_DATA_WRITER(trimmed, hosts[host_ctr].hostname, HOST_NAME)
+        PK_DATA_WRITER(trimmed, current->client->hostname, HOST_NAME)
 
         /* For each new host fill in default data */
         if(PK_STR_STARTS(trimmed, HOST_ID) == 0) {
 
-            /* Increment host buffer counter */
-            host_ctr++;
+            /* Write pointer to data pointer list */
+            union pk_cfg_snippet *nhost = (union pk_cfg_snippet*) malloc(sizeof(union pk_cfg_snippet));
+            nhost->client = malloc(sizeof(pk_client));
+            memset(nhost->client, 0, sizeof(pk_client));
 
-            strcpy(hosts[host_ctr].pk_updated, PK_DEFAULT_UPDATED);
-            strcpy(hosts[host_ctr].pk_blacklist, PK_DEFAULT_BLACKLIST);
-            strcpy(hosts[host_ctr].port, PK_DEFAULT_PORT);
-            strcpy(hosts[host_ctr].id_only, PK_DEFAULT_ID_ONLY);
+            /* Save the client in our snippet list */
+            // TODO: Check that we have enough space
+            buffer.snippets[buffer.snip_curr++] = nhost;
 
-            /* Finally write host name to new host */
-            PK_DATA_WRITER(trimmed, hosts[host_ctr].host_id, HOST_ID)
+            /* Override the current buffer */
+            current = nhost;
+            curr_t = CLIENT;
+
+            /* Write some initial default values into the client */
+            strcpy(current->client->pk_updated, PK_DEFAULT_UPDATED);
+            strcpy(current->client->pk_blacklist, PK_DEFAULT_BLACKLIST);
+            strcpy(current->client->port, PK_DEFAULT_PORT);
+            strcpy(current->client->id_only, PK_DEFAULT_ID_ONLY);
+
+            PK_DATA_WRITER(trimmed, current->client->host_id, HOST_ID)
         }
 
-        PK_DATA_WRITER(trimmed, hosts[host_ctr].id_only, ID_ONLY)
-        PK_DATA_WRITER(trimmed, hosts[host_ctr].id_file, ID_FILE)
-        PK_DATA_WRITER(trimmed, hosts[host_ctr].username, USER)
-        PK_DATA_WRITER(trimmed, hosts[host_ctr].port, PORT)
+        if(PK_STR_STARTS(trimmed, PK_EXT) == 0) {
+
+            /* First remove the known "#poke" indicator */
+            char poke_ext[128];
+            pk_string_parse(trimmed, poke_ext, 128, "#poke");
+
+            /* Parse global extentions */
+            if(PK_STR_STARTS(poke_ext, PK_VERSION) == 0) buffer.pk_version = atoi(poke_ext + strlen(PK_VERSION));
+            if(PK_STR_STARTS(poke_ext, PK_UP_FREQ) == 0) buffer.pk_upfreq = atol(poke_ext + strlen(PK_UP_FREQ));
+
+            /* Parse host specific extentions */
+            if(PK_STR_STARTS(poke_ext, PK_BLACKLIST) == 0)
+                pk_string_parse(poke_ext, current->client->pk_blacklist, 128, PK_BLACKLIST);
+
+            if(PK_STR_STARTS(poke_ext, PK_UPDATED) == 0)
+                pk_string_parse(poke_ext, current->client->pk_updated, 128, PK_UPDATED);
+        }
+
+        if(curr_t == CLIENT && current != NULL ) {
+            PK_DATA_WRITER(trimmed, current->client->id_only, ID_ONLY)
+            PK_DATA_WRITER(trimmed, current->client->id_file, ID_FILE)
+            PK_DATA_WRITER(trimmed, current->client->username, USER)
+            PK_DATA_WRITER(trimmed, current->client->port, PORT)
+        }
 
 
         /* Parse escape label to avoid assignment collisions */
@@ -129,29 +168,8 @@ int pk_parse_load(pk_parse_ctx *ctx)
         pch = strtok (NULL, delims);
     }
 
-    /* Allocate enough space for host storage and copy data */
-    ctx->hosts = (pk_parse_hst**) malloc(sizeof(pk_parse_hst*) * (host_n + 6));
-    if(ctx->hosts == NULL) return PK_ERR_MALLOC_FAILED;
-    memset(ctx->hosts, 0, sizeof(pk_parse_hst*) * (host_n + 6));
-    ctx->hsize = (int) host_n + 6;
+    printf("Debug stop HERE!\n");
 
-    /* Allocate each host on heap */
-    int i;
-    for(i = 0; i < host_n; i++) {
-
-        /* Allocate heap memory and clean it */
-        pk_parse_hst *host = (pk_parse_hst*) malloc(sizeof(pk_parse_hst) * 1);
-        if(host == NULL) return PK_ERR_MALLOC_FAILED;
-        memset(host, 0, sizeof(pk_parse_hst));
-
-        /* Copy over contents to heap memory */
-        memcpy(host, &hosts[i], sizeof(pk_parse_hst));
-
-        /* Write pointer to data pointer list */
-        ctx->hosts[i] = host;
-    }
-
-    ctx->hused = i;
     return PK_ERR_SUCCESS;
 }
 
@@ -162,25 +180,24 @@ int pk_parse_dump(pk_parse_ctx *ctx)
     CHECK_CTX
 
     if(ctx->raw_data) free(ctx->raw_data);
-
     return PK_ERR_SUCCESS;
 }
 
 
 /** Find information in the token stream for access */
-int pk_parse_query(pk_parse_ctx *ctx, pk_parse_hst **data, const char *host_id)
+int pk_parse_query(pk_parse_ctx *ctx, pk_client **data, const char *host_id)
 {
     CHECK_CTX
 
     int i;
-    for(i = 0; i < ctx->hused; i++) {
-        pk_parse_hst *host = ctx->hosts[i];
-
-        if(strcmp(host->host_id, host_id) == 0) {
-            (*data) = host;
-            break;
-        }
-    }
+//    for(i = 0; i < ctx->hused; i++) {
+//        pk_client *host = ctx->hosts[i];
+//
+//        if(strcmp(host->host_id, host_id) == 0) {
+//            (*data) = host;
+//            break;
+//        }
+//    }
 
     return PK_ERR_SUCCESS;
 }
@@ -193,19 +210,19 @@ int pk_parse_free(pk_parse_ctx *ctx)
 
 
     int i;
-    for(i = 0; i < ctx->hsize; i++) {
-        free(ctx->hosts[i]);
-    }
-
-    free(ctx->ssh_path);
-    free(ctx->raw_data);
-    free(ctx->hosts);
+//    for(i = 0; i < ctx->hsize; i++) {
+//        free(ctx->hosts[i]);
+//    }
+//
+//    free(ctx->ssh_path);
+//    free(ctx->raw_data);
+//    free(ctx->hosts);
 
     return PK_ERR_SUCCESS;
 }
 
 
-void pk_parse_printhst(pk_parse_hst *host)
+void pk_parse_printhst(pk_client *host)
 {
     /* Do a quick check if we expect this host to be valid - Avoid info bleeding */
     if(host == NULL || host->host_id == NULL || host->hostname == NULL)

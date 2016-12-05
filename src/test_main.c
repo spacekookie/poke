@@ -1,5 +1,4 @@
 #include <poke/pk.h>
-#include <poke/pk_parse.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,12 +16,13 @@ int main(void)
     pk_parse_init(&parser, TEST_PATH);
 
     /* Parse the config into context */
-    pk_parse_load(&parser);
+    pk_config *cfg;
+    pk_parse_load(&parser, &cfg);
 
     /* Query parser set for hosts */
-    pk_parse_hst *host;
-    pk_parse_query(&parser, &host, "lonelyrobot");
-    pk_parse_printhst(host);
+    pk_client *client;
+    pk_parse_query(&parser, &client, "lonelyrobot");
+    pk_parse_printhst(client);
 
     /* Free memory */
     pk_parse_free(&parser);
