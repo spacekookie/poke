@@ -19,10 +19,12 @@ int main(void)
     /* Parse the config into context */
     pk_parse_load(&parser);
 
-    int i;
-    for(i = 0; i < parser.hused; i++)
-        pk_parse_printhst(parser.hosts[i]);
+    /* Query parser set for hosts */
+    pk_parse_hst *host;
+    pk_parse_query(&parser, &host, "lonelyrobot");
+    pk_parse_printhst(host);
 
+    /* Free memory */
     pk_parse_free(&parser);
 
     t2 = clock();

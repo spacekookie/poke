@@ -15,6 +15,7 @@
         goto end_value_write; \
     } }
 
+
 /** Forward declare function headers for easier to read file **/
 void pk_string_trim(char *src, char *dst);
 void pk_string_parse(const char *src, char *payload, size_t payload_len, const char *key);
@@ -150,7 +151,7 @@ int pk_parse_load(pk_parse_ctx *ctx)
         ctx->hosts[i] = host;
     }
 
-    ctx->hused = i + 1;
+    ctx->hused = i;
     return PK_ERR_SUCCESS;
 }
 
@@ -167,9 +168,19 @@ int pk_parse_dump(pk_parse_ctx *ctx)
 
 
 /** Find information in the token stream for access */
-int pk_parse_query(pk_parse_ctx *ctx, pk_parse_hst **data, const char *hostname)
+int pk_parse_query(pk_parse_ctx *ctx, pk_parse_hst **data, const char *host_id)
 {
     CHECK_CTX
+
+    int i;
+    for(i = 0; i < ctx->hused; i++) {
+        pk_parse_hst *host = ctx->hosts[i];
+
+        if(strcmp(host->host_id, host_id) == 0) {
+            (*data) = host;
+            break;
+        }
+    }
 
     return PK_ERR_SUCCESS;
 }

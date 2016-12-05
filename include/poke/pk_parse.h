@@ -90,7 +90,7 @@ int pk_parse_load(pk_parse_ctx *ctx);
 int pk_parse_dump(pk_parse_ctx *ctx);
 
 /** Find information in the token stream for access */
-int pk_parse_query(pk_parse_ctx *ctx, pk_parse_hst **data, const char *hostname);
+int pk_parse_query(pk_parse_ctx *ctx, pk_parse_hst **data, const char *host_id);
 
 /** Free parser context from memory completely */
 int pk_parse_free(pk_parse_ctx *ctx);
