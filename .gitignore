@@ -139,3 +139,4 @@ fabric.properties
 
 .idea
 cmake-build-debug
+build/
