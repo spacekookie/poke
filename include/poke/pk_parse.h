@@ -63,12 +63,11 @@ typedef struct pk_parse_hst
 
 typedef struct pk_parse_ctx
 {
-    char          *ssh_path;
-    char          *ssh_config;
+    char            *ssh_path;
+    char            *raw_data;
 
-    char          *raw_data;
-    pk_parse_hst  **hosts;
-    int           hsize, hused;
+    pk_parse_hst    **hosts;
+    int             hsize, hused;
 
     /*
     * Store some metadata about the cfg.
@@ -95,5 +94,7 @@ int pk_parse_query(pk_parse_ctx *ctx, pk_parse_hst **data, const char *hostname)
 
 /** Free parser context from memory completely */
 int pk_parse_free(pk_parse_ctx *ctx);
+
+void pk_parse_printhst(pk_parse_hst *host);
 
 #endif

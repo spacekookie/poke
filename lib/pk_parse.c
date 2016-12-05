@@ -19,6 +19,7 @@
 void pk_string_trim(char *src, char *dst);
 void pk_string_parse(const char *src, char *payload, size_t payload_len, const char *key);
 
+
 /** Prepare a parser context for a config file */
 int pk_parse_init(pk_parse_ctx *ctx, const char *path)
 {
@@ -32,6 +33,7 @@ int pk_parse_init(pk_parse_ctx *ctx, const char *path)
 
     return PK_ERR_SUCCESS;
 }
+
 
 /** Load the config to RAM and store a series of tokens to work on */
 int pk_parse_load(pk_parse_ctx *ctx)
@@ -57,11 +59,15 @@ int pk_parse_load(pk_parse_ctx *ctx)
     strcpy(ctx->raw_data, buffer);
 
     /* Scan through the config first once to find host count */
+    char skim_buf[cfg_size + 1];
+    memset(skim_buf, 0, cfg_size + 1);
+    memcpy(skim_buf, buffer, cfg_size + 1);
+
     size_t host_n = 0;
     char *temp;
 
     /* Skim through the config once to count Host entries */
-    temp = strtok (buffer, "\n");
+    temp = strtok(skim_buf, "\n");
     while(temp != NULL) {
 
         /* Trim string for later matching */
@@ -70,7 +76,7 @@ int pk_parse_load(pk_parse_ctx *ctx)
 
         /* Explicitly match "HostName" to avoid collisions */
         if(PK_STR_STARTS(trimmed, HOST_NAME) == 0) {
-        } else if(PK_STR_STARTS(trimmed, HOST_ID)) {
+        } else if(PK_STR_STARTS(trimmed, HOST_ID) == 0) {
             host_n++;
         }
 
@@ -80,7 +86,7 @@ int pk_parse_load(pk_parse_ctx *ctx)
     /* Create some stack variables for future parsing */
     const char delims[] = "\n";
     pk_parse_hst hosts[host_n];
-    unsigned int host_ctr = 0;
+    int host_ctr = -1;
     char *pch;
 
     /* Start parsing - first token */
@@ -92,9 +98,6 @@ int pk_parse_load(pk_parse_ctx *ctx)
         /* Trim string for later matching */
         char trimmed[strlen(pch) + 1];
         pk_string_trim(pch, trimmed);
-
-        /* Store a reference pointer to the host */
-        pk_parse_hst *curr = &hosts[host_ctr];
 
         /* These two need to be in this order to avoid "Host" vs "HostName" conflicts */
         PK_DATA_WRITER(trimmed, hosts[host_ctr].hostname, HOST_NAME)
@@ -114,13 +117,43 @@ int pk_parse_load(pk_parse_ctx *ctx)
             PK_DATA_WRITER(trimmed, hosts[host_ctr].host_id, HOST_ID)
         }
 
+        PK_DATA_WRITER(trimmed, hosts[host_ctr].id_only, ID_ONLY)
+        PK_DATA_WRITER(trimmed, hosts[host_ctr].id_file, ID_FILE)
+        PK_DATA_WRITER(trimmed, hosts[host_ctr].username, USER)
+        PK_DATA_WRITER(trimmed, hosts[host_ctr].port, PORT)
+
+
         /* Parse escape label to avoid assignment collisions */
         end_value_write:
-        pch = strtok (NULL, "\n");
+        pch = strtok (NULL, delims);
     }
 
+    /* Allocate enough space for host storage and copy data */
+    ctx->hosts = (pk_parse_hst**) malloc(sizeof(pk_parse_hst*) * (host_n + 6));
+    if(ctx->hosts == NULL) return PK_ERR_MALLOC_FAILED;
+    memset(ctx->hosts, 0, sizeof(pk_parse_hst*) * (host_n + 6));
+    ctx->hsize = (int) host_n + 6;
+
+    /* Allocate each host on heap */
+    int i;
+    for(i = 0; i < host_n; i++) {
+
+        /* Allocate heap memory and clean it */
+        pk_parse_hst *host = (pk_parse_hst*) malloc(sizeof(pk_parse_hst) * 1);
+        if(host == NULL) return PK_ERR_MALLOC_FAILED;
+        memset(host, 0, sizeof(pk_parse_hst));
+
+        /* Copy over contents to heap memory */
+        memcpy(host, &hosts[i], sizeof(pk_parse_hst));
+
+        /* Write pointer to data pointer list */
+        ctx->hosts[i] = host;
+    }
+
+    ctx->hused = i + 1;
     return PK_ERR_SUCCESS;
 }
+
 
 /** Remove the store token stream and list from memory */
 int pk_parse_dump(pk_parse_ctx *ctx)
@@ -132,6 +165,7 @@ int pk_parse_dump(pk_parse_ctx *ctx)
     return PK_ERR_SUCCESS;
 }
 
+
 /** Find information in the token stream for access */
 int pk_parse_query(pk_parse_ctx *ctx, pk_parse_hst **data, const char *hostname)
 {
@@ -140,24 +174,54 @@ int pk_parse_query(pk_parse_ctx *ctx, pk_parse_hst **data, const char *hostname)
     return PK_ERR_SUCCESS;
 }
 
+
 /** Free parser context from memory completely */
 int pk_parse_free(pk_parse_ctx *ctx)
 {
     CHECK_CTX
 
-    if(ctx->raw_data) free(ctx->raw_data);
 
     int i;
-    for(i = 0; i < ctx->hused; i++) {
-        pk_parse_hst *hst = ctx->hosts[i];
-        free(hst);
+    for(i = 0; i < ctx->hsize; i++) {
+        free(ctx->hosts[i]);
     }
 
+    free(ctx->ssh_path);
+    free(ctx->raw_data);
     free(ctx->hosts);
-    free(ctx);
 
     return PK_ERR_SUCCESS;
 }
+
+
+void pk_parse_printhst(pk_parse_hst *host)
+{
+    /* Do a quick check if we expect this host to be valid - Avoid info bleeding */
+    if(host == NULL || host->host_id == NULL || host->hostname == NULL)
+        return;
+
+    /* Then (one after another) print out the data from the struct */
+    printf("=== Host: %s ===\n", host->host_id);
+    printf("\tHostName: %s\n", host->hostname);
+    printf("\tUser: %s\n", host->username);
+    printf("\tPort: %s\n", host->port);
+    printf("\tID Only: %s\n", host->id_only);
+    printf("\tID File: %s\n", host->id_file);
+    printf("\n");
+    printf("\tPK Updated: %s\n", host->pk_updated);
+    printf("\tPK Blacklisted: %s\n", host->pk_blacklist);
+
+    /* Fill in '=' symbols to make it pretty */
+    size_t host_len = strlen(host->host_id) + 9 /* Beginning */ + 4 /* End */;
+    int i;
+    for(i = 0; i <= host_len; i++) {
+        printf("=");
+    }
+
+    /* Then just add new lines */
+    printf("\n\n");
+}
+
 
 /************************************************************************************************/
 
@@ -191,3 +255,4 @@ void pk_string_parse(const char *src, char *payload, size_t payload_len, const c
     /* Ignore the <key> in the beginning of our string */
     strcpy(payload, src + strlen(key));
 }
+
