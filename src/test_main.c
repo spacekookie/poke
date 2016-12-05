@@ -68,10 +68,8 @@ void print_host_struct(pk_parse_hst *host)
 
 int main(void)
 {
-
-    struct timespec tstart={0,0}, tend={0,0};
-    clock_gettime(CLOCK_MONOTONIC, &tstart);
-
+    clock_t t1, t2;
+    t1 = clock();
 
     FILE *f = fopen(TEST_PATH, "r");
     fseek(f, 0, SEEK_END);
@@ -90,13 +88,6 @@ int main(void)
     int host_ctr = -1;
     pk_parse_hst hosts[128];
     memset(hosts, 0, sizeof(pk_parse_hst) * 128);
-
-#define HOST_NAME   "HostName"
-#define HOST_ID     "Host"
-#define PORT        "Port"
-#define USER        "User"
-#define ID_ONLY     "IdentitiesOnly"
-#define ID_FILE     "IdentityFile"
 
 #define PK_DATA_WRITER(data, target, pattern) \
     { \
@@ -130,10 +121,6 @@ int main(void)
         PK_DATA_WRITER(trimmed, hosts[host_ctr].username, USER)
         PK_DATA_WRITER(trimmed, hosts[host_ctr].port, PORT)
 
-#define PK_EXT          "#poke"
-#define PK_UPDATED      "pk_updated"
-#define PK_BLACKLIST    "pk_blacklisted"
-
         /** Check for our own #poke extentions */
         if(STR_STARTS(trimmed, PK_EXT) == 0) {
 
@@ -158,25 +145,10 @@ int main(void)
         print_host_struct(&hosts[i]);
     }
 
-    clock_gettime(CLOCK_MONOTONIC, &tend);
-    printf("Took about %.5f seconds\n",
-           ((double)tend.tv_sec + 1.0e-9*tend.tv_nsec) -
-           ((double)tstart.tv_sec + 1.0e-9*tstart.tv_nsec));
+    t2 = clock();
+    float diff = ((float)(t2 - t1) / 1000000.0F ) * 1000;
+    printf("Program execution took %f milliseconds\n",diff);
 
     return 0;
 
-    printf("=== Welcome to poke ===\n");
-
-    /* Create a context for a test path */
-    pk_dm_ctx ctx;
-    pk_parse_ctx parser;
-
-    pk_dm_init(&ctx, TEST_PATH);
-
-    /* Parse the ssh config */
-    pk_parse_init(&parser, TEST_PATH);
-
-    /* Clean up and quit */
-    pk_dm_free(&ctx);
-    return 0;
 }

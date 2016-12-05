@@ -22,6 +22,28 @@
 
 #include "pk.h"
 
+
+#define PK_EXT          "#poke"
+#define PK_UPDATED      "pk_updated"
+#define PK_BLACKLIST    "pk_blacklisted"
+
+
+#define HOST_NAME   "HostName"
+#define HOST_ID     "Host"
+#define PORT        "Port"
+#define USER        "User"
+#define ID_ONLY     "IdentitiesOnly"
+#define ID_FILE     "IdentityFile"
+
+
+/* Define some default parameters that can be overwritten at compile time */
+// TODO: Find out actual default values
+#define PK_DEFAULT_UPDATED      "-1"
+#define PK_DEFAULT_BLACKLIST    "no"
+#define PK_DEFAULT_PORT         "22"
+#define PK_DEFAULT_ID_ONLY      "no"
+
+
 typedef struct pk_parse_hst
 {
     char    host_id[128];

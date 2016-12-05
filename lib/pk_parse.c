@@ -6,6 +6,19 @@
 #define CHECK_CTX if(ctx == NULL) return PK_ERR_INVALID_PARAMS;
 #define BUFFER_SIZE 32768
 
+#define PK_STR_STARTS(src, check) strncmp(src, check, strlen(check))
+#define PK_DATA_WRITER(data, target, pattern) \
+    { \
+    if(PK_STR_STARTS(data, pattern) == 0) { \
+        pk_string_parse(data, target, 128, pattern); \
+        /* printf("'%s' now: %s\n", #pattern, target); */ \
+        goto end_value_write; \
+    } }
+
+/** Forward declare function headers for easier to read file **/
+void pk_string_trim(char *src, char *dst);
+void pk_string_parse(const char *src, char *payload, size_t payload_len, const char *key);
+
 /** Prepare a parser context for a config file */
 int pk_parse_init(pk_parse_ctx *ctx, const char *path)
 {
@@ -25,26 +38,85 @@ int pk_parse_load(pk_parse_ctx *ctx)
 {
     CHECK_CTX
 
-    /** Create a clean buffer for \0 string */
-    char buffer[BUFFER_SIZE];
-    memset(buffer, 0, BUFFER_SIZE);
 
-    FILE *config = fopen(ctx->ssh_path, "r");
-    size_t cfg_len = 1;
+    /* Open the file and seek through it for length */
+    FILE *f = fopen(ctx->ssh_path, "r");
+    fseek(f, 0, SEEK_END);
+    size_t cfg_size = (size_t) ftell(f);
+    fseek(f, 0, SEEK_SET);
 
-    /** Copy the raw data into a struct buffer for future reference */
-    ctx->raw_data = (char*) malloc(sizeof(char) * cfg_len);
+    /* Create a buffer of the correct size */
+    char buffer[cfg_size + 1];
+    memset(buffer, 0, cfg_size + 1);
+    fread(buffer, cfg_size, 1, f);
+    fclose(f);
+
+    /* Copy the raw data into a struct buffer for future reference */
+    ctx->raw_data = (char*) malloc(sizeof(char) * cfg_size);
     if(ctx->raw_data == NULL) return PK_ERR_MALLOC_FAILED;
     strcpy(ctx->raw_data, buffer);
 
-    char str[] ="- This, a sample string.";
-    char * pch;
-    printf ("Splitting string \"%s\" into tokens:\n",str);
-    pch = strtok (str," ,.-");
+    /* Scan through the config first once to find host count */
+    size_t host_n = 0;
+    char *temp;
 
-    while (pch != NULL) {
-        printf ("%s\n",pch);
-        pch = strtok (NULL, " ,.-");
+    /* Skim through the config once to count Host entries */
+    temp = strtok (buffer, "\n");
+    while(temp != NULL) {
+
+        /* Trim string for later matching */
+        char trimmed[strlen(temp) + 1];
+        pk_string_trim(temp, trimmed);
+
+        /* Explicitly match "HostName" to avoid collisions */
+        if(PK_STR_STARTS(trimmed, HOST_NAME) == 0) {
+        } else if(PK_STR_STARTS(trimmed, HOST_ID)) {
+            host_n++;
+        }
+
+        temp = strtok(NULL, "\n");
+    }
+
+    /* Create some stack variables for future parsing */
+    const char delims[] = "\n";
+    pk_parse_hst hosts[host_n];
+    unsigned int host_ctr = 0;
+    char *pch;
+
+    /* Start parsing - first token */
+    pch = strtok (buffer, delims);
+
+    /* Then iterate through the token list */
+    while(pch != NULL) {
+
+        /* Trim string for later matching */
+        char trimmed[strlen(pch) + 1];
+        pk_string_trim(pch, trimmed);
+
+        /* Store a reference pointer to the host */
+        pk_parse_hst *curr = &hosts[host_ctr];
+
+        /* These two need to be in this order to avoid "Host" vs "HostName" conflicts */
+        PK_DATA_WRITER(trimmed, hosts[host_ctr].hostname, HOST_NAME)
+
+        /* For each new host fill in default data */
+        if(PK_STR_STARTS(trimmed, HOST_ID) == 0) {
+
+            /* Increment host buffer counter */
+            host_ctr++;
+
+            strcpy(hosts[host_ctr].pk_updated, PK_DEFAULT_UPDATED);
+            strcpy(hosts[host_ctr].pk_blacklist, PK_DEFAULT_BLACKLIST);
+            strcpy(hosts[host_ctr].port, PK_DEFAULT_PORT);
+            strcpy(hosts[host_ctr].id_only, PK_DEFAULT_ID_ONLY);
+
+            /* Finally write host name to new host */
+            PK_DATA_WRITER(trimmed, hosts[host_ctr].host_id, HOST_ID)
+        }
+
+        /* Parse escape label to avoid assignment collisions */
+        end_value_write:
+        pch = strtok (NULL, "\n");
     }
 
     return PK_ERR_SUCCESS;
@@ -85,4 +157,37 @@ int pk_parse_free(pk_parse_ctx *ctx)
     free(ctx);
 
     return PK_ERR_SUCCESS;
+}
+
+/************************************************************************************************/
+
+void pk_string_trim(char *src, char *dst)
+{
+    int s, d=0;
+    for (s=0; src[s] != 0; s++)
+        if (src[s] != ' ') {
+            dst[d] = src[s];
+            d++;
+        }
+    dst[d] = 0;
+}
+
+
+/**
+ * A simple utility function which extracts the value out of a key-value config pair.
+ * It does so by copying the data into a payload string, without modifying the original
+ * data provided.
+ *
+ * @param src
+ * @param payload
+ * @param payload_len
+ * @param key
+ */
+void pk_string_parse(const char *src, char *payload, size_t payload_len, const char *key)
+{
+    /* First make sure memory is nice and clean */
+    memset(payload, 0, payload_len);
+
+    /* Ignore the <key> in the beginning of our string */
+    strcpy(payload, src + strlen(key));
 }
