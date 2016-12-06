@@ -143,7 +143,7 @@ int pk_parse_load(pk_parse_ctx *ctx, pk_config *cfg)
 
             /* Write some initial default values into the client */
             strcpy(current->pl.client->pk_updated, PK_DEFAULT_UPDATED);
-            strcpy(current->pl.client->pk_blacklist, PK_DEFAULT_BLACKLIST);
+            strcpy(current->pl.client->pk_blacklist, PK_DEFAULT_IGNORE);
             strcpy(current->pl.client->id_only, PK_DEFAULT_ID_ONLY);
 
             current->pl.client->port = atoi(PK_DEFAULT_PORT);

@@ -24,8 +24,10 @@ int main(void)
     pk_parse_query(&cfg, &client, "lonelyrobot");
     pk_parse_printhst(client);
 
-    /* Free memory */
-    pk_parse_free(&parser);
+    pk_sm_ctx ses;
+    pk_sm_init(&ses, client);
+
+    pk_sm_start(&ses);
 
     t2 = clock();
     float diff = ((float)(t2 - t1) / 1000000.0F ) * 1000;

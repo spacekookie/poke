@@ -21,6 +21,7 @@
 #define POKE_PK_H
 
 
+#include <libssh/libssh.h>
 #include <stdbool.h>
 #include <unistd.h>
 
@@ -33,9 +34,10 @@
 
 
 #define PK_ERR_SUCCESS          0
-#define PK_ERR_RROR             (1 << 1)
+#define PK_ERR_ERROR            (1 << 1)
 #define PK_ERR_MALLOC_FAILED    (1 << 2)
 #define PK_ERR_INVALID_PARAMS   (1 << 3)
+#define PK_INIT_FAILED          (1 << 4)
 
 
 /** A unified pk_client struct that holds host data **/
@@ -86,35 +88,45 @@ typedef struct pk_config {
 
 
 /* Define some pk extentions (protocol version 1) */
-#define PK_EXT          "#poke"
-#define PK_VERSION      "pk_version"
-#define PK_UP_FREQ      "pk_upfreq"
-#define PK_UPDATED      "pk_updated"
-#define PK_BLACKLIST    "pk_blacklisted"
+#define PK_EXT              "#poke"
+#define PK_VERSION          "pk_version"
+#define PK_UP_FREQ          "pk_upfreq"
+#define PK_UPDATED          "pk_updated"
+#define PK_BLACKLIST        "pk_blacklisted"
 
 /* Define our key value markers */
-#define PK_PARSE_HOST_NAME   "HostName"
-#define PK_PARSE_HOST_ID     "Host"
-#define PK_PARSE_PORT        "Port"
-#define PK_PARSE_USER        "User"
-#define PK_PARSE_ID_ONLY     "IdentitiesOnly"
-#define PK_PARSE_ID_FILE     "IdentityFile"
-
+#define PK_PARSE_HOST_NAME  "HostName"
+#define PK_PARSE_HOST_ID    "Host"
+#define PK_PARSE_PORT       "Port"
+#define PK_PARSE_USER       "User"
+#define PK_PARSE_ID_ONLY    "IdentitiesOnly"
+#define PK_PARSE_ID_FILE    "IdentityFile"
 
 /* Define some default parameters that can be overwritten at compile time */
 // TODO: Find out actual default values
-#define PK_DEFAULT_UPDATED      "-1"
-#define PK_DEFAULT_BLACKLIST    "no"
-#define PK_DEFAULT_PORT         "22"
-#define PK_DEFAULT_ID_ONLY      "no"
+#define PK_DEFAULT_UPDATED  "-1"
+#define PK_DEFAULT_IGNORE   "no"
+#define PK_DEFAULT_PORT     "22"
+#define PK_DEFAULT_ID_ONLY  "no"
+
+/* Recursive parse merge modes */
+#define PK_RECMODE_SIMPLE   (1 << 1)    // Sane default
+#define PK_RECMODE_FORCE    (1 << 2)
+#define PK_RECMODE_NONE     (1 << 3)
 
 
+/**
+ * A context that helps parse context files. It keeps a copy of
+ * all raw data parsed for future reference (required be the generator
+ * as well as settings on how to recursively parse config files (merge
+ * strategies).
+ */
 typedef struct pk_parse_ctx
 {
-    char        *ssh_path;
-    char        *raw_data;
+    char    *ssh_path;
+    char    *raw_data;
 
-    bool        recursive;
+    int     rec_mode;
 } pk_parse_ctx;
 
 
@@ -143,17 +155,32 @@ void pk_parse_printhst(pk_client *host);
  ***********************************************/
 
 
-/** Define a session manager context that holds metadata about current session **/
+/**
+ * Helper context struct that is created for a specific target/ id
+ * combination and represents an ssh session for libssh. Freeing this
+ * struct will automatically end the underlying session.
+ */
 typedef struct pk_sm_ctx
 {
-    const pk_client *target;
-    char            *cmd;
-    char            *key_swap;
+    pk_client       client;
+    ssh_session     session;
+
+    bool            sess_open;
+    time_t          creation, updated;
 } pk_sm_ctx;
 
 
 /** Initialises a context with everything that is required for it to work **/
-int pk_sm_init(pk_sm_ctx *ctx, const char *cfg_pth);
+int pk_sm_init(pk_sm_ctx *ctx, pk_client *cl);
+
+/** Start the underlying ssh session. Needs to be called before transactions **/
+int pk_sm_start(pk_sm_ctx *ctx);
+
+/** Implictly called by #{pk_sm_free}. Closes the current ssh session */
+int pk_sm_stop(pk_sm_ctx *ctx);
+
+/** Submits a new command to the queue to be executed on the remote host */
+int pk_sm_exec(pk_sm_ctx *ctx, const char *cmd);
 
 /** Safely frees a context from memory **/
 int pk_sm_free(pk_sm_ctx *ctx);
