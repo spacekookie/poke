@@ -37,9 +37,12 @@ int pk_parse_init(pk_parse_ctx *ctx, const char *path)
 
 
 /** Load the config to RAM and store a series of tokens to work on */
-int pk_parse_load(pk_parse_ctx *ctx, pk_config **cfg)
+int pk_parse_load(pk_parse_ctx *ctx, pk_config *cfg)
 {
     CHECK_CTX
+
+    /* Clear cfg pointer in case of error */
+    memset(cfg, 0, sizeof(pk_config));
 
     /* Open the file and seek through it for length */
     FILE *f = fopen(ctx->ssh_path, "r");
@@ -75,8 +78,8 @@ int pk_parse_load(pk_parse_ctx *ctx, pk_config **cfg)
         pk_string_trim(temp, trimmed);
 
         /* Explicitly match "HostName" to avoid collisions */
-        if(PK_STR_STARTS(trimmed, HOST_NAME) == 0) {
-        } else if(PK_STR_STARTS(trimmed, HOST_ID) == 0) {
+        if(PK_STR_STARTS(trimmed, PK_PARSE_HOST_NAME) == 0) {
+        } else if(PK_STR_STARTS(trimmed, PK_PARSE_HOST_ID) == 0) {
             host_n++;
         }
 
@@ -89,13 +92,14 @@ int pk_parse_load(pk_parse_ctx *ctx, pk_config **cfg)
     char *pch;
 
     /* Buffer for current snippet (block or client) */
-    union pk_cfg_snippet *current = NULL;
+    pk_cfg_snippet *current = NULL;
 
     enum pk_parse_type { BLOCK, CLIENT };
     enum pk_parse_type curr_t = CLIENT;
 
-    size_t snippets_size = sizeof(union pk_cfg_snippet) * host_n * 2;
-    buffer.snippets = (union pk_cfg_snippet**) malloc(snippets_size);
+    /* Allocate space for snippet list on the heap - might be resized */
+    size_t snippets_size = sizeof(pk_cfg_snippet) * host_n * 2;
+    buffer.snippets = (pk_cfg_snippet**) malloc(snippets_size);
     memset(buffer.snippets, 0, snippets_size);
     buffer.snip_max = snippets_size;
 
@@ -110,31 +114,41 @@ int pk_parse_load(pk_parse_ctx *ctx, pk_config **cfg)
         pk_string_trim(pch, trimmed);
 
         /* These two need to be in this order to avoid "Host" vs "HostName" conflicts */
-        PK_DATA_WRITER(trimmed, current->client->hostname, HOST_NAME)
+        PK_DATA_WRITER(trimmed, current->pl.client->hostname, PK_PARSE_HOST_NAME)
 
         /* For each new host fill in default data */
-        if(PK_STR_STARTS(trimmed, HOST_ID) == 0) {
+        if(PK_STR_STARTS(trimmed, PK_PARSE_HOST_ID) == 0) {
 
             /* Write pointer to data pointer list */
-            union pk_cfg_snippet *nhost = (union pk_cfg_snippet*) malloc(sizeof(union pk_cfg_snippet));
-            nhost->client = malloc(sizeof(pk_client));
-            memset(nhost->client, 0, sizeof(pk_client));
+            pk_cfg_snippet *nhost = (pk_cfg_snippet*) malloc(sizeof(pk_cfg_snippet));
+            nhost->pl.client = malloc(sizeof(pk_client));
+            memset(nhost->pl.client, 0, sizeof(pk_client));
+
+            /*
+             * Make sure we have enough space for snippets. Especially
+             * with recursive configs, this can be called often!
+             */
+            if(buffer.snip_curr + 1 >= buffer.snip_max) {
+                buffer.snip_max += 4; // TODO: Pick a sane value
+                buffer.snippets = realloc(buffer.snippets, buffer.snip_max);
+            }
 
             /* Save the client in our snippet list */
-            // TODO: Check that we have enough space
             buffer.snippets[buffer.snip_curr++] = nhost;
 
             /* Override the current buffer */
             current = nhost;
             curr_t = CLIENT;
+            nhost->type = PK_SNIP_CLIENT;
 
             /* Write some initial default values into the client */
-            strcpy(current->client->pk_updated, PK_DEFAULT_UPDATED);
-            strcpy(current->client->pk_blacklist, PK_DEFAULT_BLACKLIST);
-            strcpy(current->client->port, PK_DEFAULT_PORT);
-            strcpy(current->client->id_only, PK_DEFAULT_ID_ONLY);
+            strcpy(current->pl.client->pk_updated, PK_DEFAULT_UPDATED);
+            strcpy(current->pl.client->pk_blacklist, PK_DEFAULT_BLACKLIST);
+            strcpy(current->pl.client->id_only, PK_DEFAULT_ID_ONLY);
 
-            PK_DATA_WRITER(trimmed, current->client->host_id, HOST_ID)
+            current->pl.client->port = atoi(PK_DEFAULT_PORT);
+
+            PK_DATA_WRITER(trimmed, current->pl.client->host_id, PK_PARSE_HOST_ID)
         }
 
         if(PK_STR_STARTS(trimmed, PK_EXT) == 0) {
@@ -149,26 +163,37 @@ int pk_parse_load(pk_parse_ctx *ctx, pk_config **cfg)
 
             /* Parse host specific extentions */
             if(PK_STR_STARTS(poke_ext, PK_BLACKLIST) == 0)
-                pk_string_parse(poke_ext, current->client->pk_blacklist, 128, PK_BLACKLIST);
+                pk_string_parse(poke_ext, current->pl.client->pk_blacklist, 128, PK_BLACKLIST);
 
             if(PK_STR_STARTS(poke_ext, PK_UPDATED) == 0)
-                pk_string_parse(poke_ext, current->client->pk_updated, 128, PK_UPDATED);
+                pk_string_parse(poke_ext, current->pl.client->pk_updated, 128, PK_UPDATED);
         }
 
         if(curr_t == CLIENT && current != NULL ) {
-            PK_DATA_WRITER(trimmed, current->client->id_only, ID_ONLY)
-            PK_DATA_WRITER(trimmed, current->client->id_file, ID_FILE)
-            PK_DATA_WRITER(trimmed, current->client->username, USER)
-            PK_DATA_WRITER(trimmed, current->client->port, PORT)
-        }
+            PK_DATA_WRITER(trimmed, current->pl.client->id_only, PK_PARSE_ID_ONLY)
+            PK_DATA_WRITER(trimmed, current->pl.client->id_file, PK_PARSE_ID_FILE)
+            PK_DATA_WRITER(trimmed, current->pl.client->username, PK_PARSE_USER)
 
+            /* Special case for numbers */
+            if(PK_STR_STARTS(trimmed, PK_PARSE_PORT) == 0) {
+                char port_number[32];
+                pk_string_parse(trimmed, port_number, 32, PK_PARSE_PORT);
+
+                /* Atoi asign port number and GOTO end */
+                current->pl.client->port = atoi(port_number);
+                goto end_value_write;
+            }
+
+            /****************/
+        }
 
         /* Parse escape label to avoid assignment collisions */
         end_value_write:
         pch = strtok (NULL, delims);
     }
 
-    printf("Debug stop HERE!\n");
+    /* Finally copy over our shallow data (heap data follows) */
+    memcpy(cfg, &buffer, sizeof(pk_config));
 
     return PK_ERR_SUCCESS;
 }
@@ -185,19 +210,19 @@ int pk_parse_dump(pk_parse_ctx *ctx)
 
 
 /** Find information in the token stream for access */
-int pk_parse_query(pk_parse_ctx *ctx, pk_client **data, const char *host_id)
+int pk_parse_query(pk_config *cfg, pk_client **data, const char *host_id)
 {
-    CHECK_CTX
+    *data = NULL;
 
     int i;
-//    for(i = 0; i < ctx->hused; i++) {
-//        pk_client *host = ctx->hosts[i];
-//
-//        if(strcmp(host->host_id, host_id) == 0) {
-//            (*data) = host;
-//            break;
-//        }
-//    }
+    for(i = 0; i < cfg->snip_curr; i++) {
+        pk_cfg_snippet *s = cfg->snippets[i];
+
+        if(s->type == PK_SNIP_CLIENT && strcmp(s->pl.client->host_id, host_id) == 0) {
+            *data = s->pl.client;
+            break;
+        }
+    }
 
     return PK_ERR_SUCCESS;
 }
@@ -208,15 +233,8 @@ int pk_parse_free(pk_parse_ctx *ctx)
 {
     CHECK_CTX
 
-
-    int i;
-//    for(i = 0; i < ctx->hsize; i++) {
-//        free(ctx->hosts[i]);
-//    }
-//
-//    free(ctx->ssh_path);
-//    free(ctx->raw_data);
-//    free(ctx->hosts);
+    free(ctx->ssh_path);
+    free(ctx->raw_data);
 
     return PK_ERR_SUCCESS;
 }
@@ -232,7 +250,7 @@ void pk_parse_printhst(pk_client *host)
     printf("=== Host: %s ===\n", host->host_id);
     printf("\tHostName: %s\n", host->hostname);
     printf("\tUser: %s\n", host->username);
-    printf("\tPort: %s\n", host->port);
+    printf("\tPort: %d\n", host->port);
     printf("\tID Only: %s\n", host->id_only);
     printf("\tID File: %s\n", host->id_file);
     printf("\n");

@@ -16,12 +16,12 @@ int main(void)
     pk_parse_init(&parser, TEST_PATH);
 
     /* Parse the config into context */
-    pk_config *cfg;
+    pk_config cfg;
     pk_parse_load(&parser, &cfg);
 
-    /* Query parser set for hosts */
+    /* Query config for hosts */
     pk_client *client;
-    pk_parse_query(&parser, &client, "lonelyrobot");
+    pk_parse_query(&cfg, &client, "lonelyrobot");
     pk_parse_printhst(client);
 
     /* Free memory */
@@ -29,7 +29,7 @@ int main(void)
 
     t2 = clock();
     float diff = ((float)(t2 - t1) / 1000000.0F ) * 1000;
-    printf("Program execution took %f milliseconds\n",diff);
+    printf("Program execution took %f milliseconds\n", diff);
 
     return 0;
 

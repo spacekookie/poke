@@ -33,9 +33,9 @@
 
 
 #define PK_ERR_SUCCESS          0
-#define PK_ERR_GENERROR         1
-#define PK_ERR_MALLOC_FAILED    2
-#define PK_ERR_INVALID_PARAMS   3
+#define PK_ERR_RROR             (1 << 1)
+#define PK_ERR_MALLOC_FAILED    (1 << 2)
+#define PK_ERR_INVALID_PARAMS   (1 << 3)
 
 
 /** A unified pk_client struct that holds host data **/
@@ -48,25 +48,33 @@ typedef struct pk_client
 
     char    id_only[128];           // Only use keys
     char    id_file[128];           // What key to use
-    char    port[128];              // SSH port
+    int     port;                   // SSH connection port
 
     char    pk_updated[128];        // Last key update time
     char    pk_blacklist[128];      // Ignore pk_* variables
 } pk_client;
 
 
-union pk_cfg_snippet{
-    pk_client   *client;
-    char        *block;
-};
+/* Two snippet types to differentiate */
+#define PK_SNIP_BLOCK   0xEE
+#define PK_SNIP_CLIENT  0xFF
+
+
+typedef struct pk_cfg_snippet {
+    union {
+        pk_client   *client;
+        char        *block;
+    } pl;
+    short           type;
+} pk_cfg_snippet;
 
 
 typedef struct pk_config {
-    int         pk_version;
-    long        pk_upfreq;
+    int             pk_version;
+    long            pk_upfreq;
 
-    union pk_cfg_snippet    **snippets;
-    size_t                  snip_curr, snip_max;
+    pk_cfg_snippet  **snippets;
+    size_t          snip_curr, snip_max;
 } pk_config;
 
 
@@ -85,12 +93,12 @@ typedef struct pk_config {
 #define PK_BLACKLIST    "pk_blacklisted"
 
 /* Define our key value markers */
-#define HOST_NAME   "HostName"
-#define HOST_ID     "Host"
-#define PORT        "Port"
-#define USER        "User"
-#define ID_ONLY     "IdentitiesOnly"
-#define ID_FILE     "IdentityFile"
+#define PK_PARSE_HOST_NAME   "HostName"
+#define PK_PARSE_HOST_ID     "Host"
+#define PK_PARSE_PORT        "Port"
+#define PK_PARSE_USER        "User"
+#define PK_PARSE_ID_ONLY     "IdentitiesOnly"
+#define PK_PARSE_ID_FILE     "IdentityFile"
 
 
 /* Define some default parameters that can be overwritten at compile time */
@@ -114,13 +122,13 @@ typedef struct pk_parse_ctx
 int pk_parse_init(pk_parse_ctx *ctx, const char *path);
 
 /** Load the config to RAM and store a series of tokens to work on */
-int pk_parse_load(pk_parse_ctx *ctx, pk_config **cfg);
+int pk_parse_load(pk_parse_ctx *ctx, pk_config *cfg);
 
 /** Remove the store token stream and list from memory */
 int pk_parse_dump(pk_parse_ctx *ctx);
 
 /** Find information in the token stream for access */
-int pk_parse_query(pk_parse_ctx *ctx, pk_client **data, const char *host_id);
+int pk_parse_query(pk_config *cfg, pk_client **data, const char *host_id);
 
 /** Free parser context from memory completely */
 int pk_parse_free(pk_parse_ctx *ctx);
