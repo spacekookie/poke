@@ -1,36 +1,46 @@
 ![Poke Logo](https://raw.githubusercontent.com/spacekookie/ssh-poke/master/shell_sc_313.png)
 
-# Poke
+The most annoyingly awesome, most powerful and all knowing [ssh][ssh] host and key manager written in C with [libssh][libssh] and [libdyntree][libdyntree]. Contains 25% more ssh than the leading competitor^1^.
 
 
-`poke` is the most anoyingly awesome, most powerful and most extendable [ssh][ssh] host and key manager written in C. It contains 25% more SSH than the leading competitor.
+## How to use
 
-## Usage
+poke works by augmenting your default `ssh config`. Traditionally, you could create sections to add hosts, and attach information to them so that ssh knows how to connect to them. Poke makes this easier.
 
-Hosts are stored in your ~/.ssh/config file and can be added in one of two ways. Explicitly:
+**Adding new hosts**
+
+You can either add a new host directly (explicitly):
 
 ```console
-user@machine ~ $> poke my_server myuser@182.11.185.23 -D 3182 -X -p 1022
+user@machine ~ $> poke -add testserv megauser@33.44.55.66 -D 3182 -X -p 9001
 ```
 
-or implicitly by crawling through your shell history:
+or you can add a new host implicitly by looking at your previous ssh commands and picking the last one from the list:
 
 ```console
-user@machine ~ $> ssh myuser@182.11.185.23 -D 3182 -X -p 1022
-user@machine ~ $> poke add my_server
+user@machine ~ $> ssh megauser@33.44.55.66 -D 3182 -X -p 9001
+user@machine ~ $> poke --add testserv
 ```
 
-Some other useful commands
+**Listing all known hosts**
+
+If you just quickly want to get an overview of what hosts you have setup in your config you can simply use the list command:
 
 ```console
-user@machine ~ $> poke ls
-* super_server
-* uni3
-* jane.nas
+user@machine ~ $> poke --list
+ - server1 (5.1.1.244)
+ - uni3 (server.uit-university.edu)
+ - jane.nas (192.168.1.22)
+```
 
-user@machine ~ $> poke rm super_server
+**Connecting to a host**
 
+You can use poke to connect to your hosts while letting it also handle a few very useful things in the background for you. This means that all your key-rules can be enforced during connection time (details see below)
+
+```console
 user@machine ~ $> poke jane.nas
+[Key Update] Your key was updated because it was 32.4 days old!
+
 Host key fingerprint is f9:63:1a:22:9f:d4:00:11:1f:bc:de:fa:dc:ec:2b:47
 +----[SHA 256]----+
 |                 |
@@ -48,44 +58,49 @@ Last login: Sat Nov  18 00:00:00 1995 from 0.0.0.0
 guest@jane.nas ~ $>
 ```
 
-## Now in depth
-
-For people who actually care (this is all in alpha anyways :) )
-
-#### Take your world with you
-
-We all have special setups and shortcuts and scripts and...
-And then we log into a client machine just to realise that their .vimrc is non-existent and by default `ll` is mapped to `cowsay "The fuck?"`. Now there is a solution to this!
-
-Simply configure ghost with a configuration in which you define what things you want to take with you when working on servers. You can even blacklist servers to NOT take certain things with you. This includes your fishrc, your aliases and even custom scripts from a path of your choosing!
-
-And the best thing? After initial configuration, you don't have to do a thing!
-
-```bash
-$> ghost super_server
-```
-
-And after you're done all the temporary stuff will be removed from the server again...as if you were never there!
-
 #### Automatic keys
 
-Yes...we should all have unique keys for every server. And yes, we should totally change them from time to time. And no, nobody *ever* does so. Because it's time consuming and boring. Until now!
+Yes, we should all have unique keys for every server we connect to. And yes, we should exchange those keys as frequently as possible. But nobody *ever* does. Because it takes a lot of time and is boring. And we just forget.
 
-With a simple parameter ghost will not only connect to a server but also check the age of the key on said server. And if the key is too old generate a new one, swap out the public keys, test the key in the background and only after successful connection delete the old keys.
+Poke can help! When using `poke ` to connect to a server, it will by default check the key that is being used to connect. If the key doesn't exist, it will create one. If it is too old, it will exchange it. Always making sure that you are safe. You don't need to do anything!
 
-This way you will always be in excellent shape with your key management. With next to zero effort on your behalf!
+If you don't want to use poke as an SSH agent, don't worry. You can start `poked`, the poke daemon. It runs in the background of your system and periodically checks the age of keys and exchanges them if required.
 
-Isn't that awesome? Naaaah? Naaaaah? C'maaaaaaan!
+## How to build
 
+Poke can be built with `cmake`.Make sure that you have access to both libssh-dev and libdyntree-dev. The latter is included in the main repository via a git submodule. Thus, make sure to fetch it during cloning
 
-## Tests
+```console
+$> git clone --recursive https://github.com/spacekookie/poke.git
+```
 
-Yes yes, I'll write tests. I promise
+An out of source build is recommended with cmake:
+
+```console
+$> mkdir build && cd build
+$> cmake ..
+$> make
+```
+
 
 ## Installation
 
-Whatever...
+Installing can be done by simpling typing `sudo make install`. This should only be done if poke can't be installed via a global package manager system.
+
+There is a pre-built `poke` package on the [AUR][aur_package]
+
+## Miscellanious
+
+Poke is published under the GPL-3 license while libpoke (the library powering the CLI and daemon) is licensed under the LGPL-3 license. This means that you are allowed to embed the library into proprietary work.
+
+If you find any bugs in the code please submit them to the issue tracker in the github repository.
+
+---
+
+~^1^ Tested in a closed environment with a triple blind control group. Study conditions may apply. Your enjoyment in the tool may vary.~
 
 [rustlang]: http://rustlang.org/
 [ssh]: https://wikipedia.org/wiki/Secure_Shell
-=======
+[libssh]: https://wikipedia.org/wiki/Secure_Shell
+[libdyntree]: https://wikipedia.org/wiki/Secure_Shell
+[aur_package]: https://wikipedia.org/wiki/Secure_Shell
