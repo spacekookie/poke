@@ -1,6 +1,6 @@
 ![Poke Logo](https://raw.githubusercontent.com/spacekookie/ssh-poke/master/shell_sc_313.png)
 
-The most annoyingly awesome, most powerful and all knowing [ssh][ssh] host and key manager written in C with [libssh][libssh] and [libdyntree][libdyntree]. Contains 25% more ssh than the leading competitor^1^.
+The most annoyingly awesome, most powerful and all knowing [ssh][ssh] host and key manager written in C with [libssh][libssh] and [libdyntree][libdyntree]. Contains 25% more ssh than the leading competitor<sup>1</sup>.
 
 
 ## How to use
@@ -97,10 +97,10 @@ If you find any bugs in the code please submit them to the issue tracker in the 
 
 ---
 
-~^1^ Tested in a closed environment with a triple blind control group. Study conditions may apply. Your enjoyment in the tool may vary.~
+<sub><sup>1</sup> Tested in a closed environment with a triple blind control group. Study conditions may apply. Your enjoyment in the tool may vary.</sub>
 
 [rustlang]: http://rustlang.org/
 [ssh]: https://wikipedia.org/wiki/Secure_Shell
-[libssh]: https://wikipedia.org/wiki/Secure_Shell
-[libdyntree]: https://wikipedia.org/wiki/Secure_Shell
-[aur_package]: https://wikipedia.org/wiki/Secure_Shell
+[libssh]: https://www.libssh.org/
+[libdyntree]: https://github.com/reepass/libdyntree
+[aur_package]: soon...
