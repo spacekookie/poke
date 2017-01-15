@@ -1,11 +1,11 @@
 #include <poke.h>
 
-#include <string.h>
-
 #include <time.h>
 #include <stdio.h>
 #include <malloc.h>
 #include <errno.h>
+
+#include <libssh/libssh.h>
 
 #define CHECK_CTX \
     if(ctx == NULL) return PK_ERR_INVALID_PARAMS;
@@ -16,19 +16,23 @@ int verify_knownhost(ssh_session session);
 
 
 /** Initialises a context with everything that is required for it to work **/
-int pk_sm_init(pk_sm_ctx *ctx, pk_client *cl)
+int pk_sm_init(pk_sm_ctx *ctx, pk_parse_hst *host)
 {
     CHECK_CTX
 
     /* Blank memory for safety */
     memset(ctx, 0, sizeof(pk_sm_ctx));
 
-    /* Copy pk_client into struct */
-    memcpy(&ctx->client, cl, sizeof(pk_client));
+    /** Allocate new host so we stop relying on stack data or config struct */
+    pk_parse_hst *copy = (pk_parse_hst*) malloc(sizeof(pk_parse_hst));
+    memcpy(copy, host, sizeof(pk_parse_hst));
+
+    /** Store pointer to struct copy */
+    ctx->host = copy;
 
     /* Create a dummy ssh session we can work with in the future */
-    ctx->session = ssh_new();
-    if(ctx->session == NULL) return PK_INIT_FAILED;
+    ctx->sess = ssh_new();
+    if(ctx->sess == NULL) return PK_ERR_INIT_FAILED;
 
     /* Update times & return */
     ctx->creation = time(0);
@@ -44,19 +48,19 @@ int pk_sm_start(pk_sm_ctx *ctx)
     int verbosity = SSH_LOG_PROTOCOL;
 
     /* Initialise our SSH session with some basic settings */
-    ret = ssh_options_set(ctx->session, SSH_OPTIONS_HOST, ctx->client.hostname);
-    ret = ssh_options_set(ctx->session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
-    ret = ssh_options_set(ctx->session, SSH_OPTIONS_PORT, &ctx->client.port);
+    ret = ssh_options_set(ctx->sess, SSH_OPTIONS_HOST, ctx->host->hostname);
+    ret = ssh_options_set(ctx->sess, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
+    ret = ssh_options_set(ctx->sess, SSH_OPTIONS_PORT, &ctx->host->port);
 
     /* Attempt to open a connection - carefully */
-    ret =  ssh_connect(ctx->session);
+    ret =  ssh_connect(ctx->sess);
     if (ret != SSH_OK) {
-        fprintf(stdout, "Error connecting to localhost: %s\n", ssh_get_error(ctx->session));
-        return PK_ERR_ERROR;
+        fprintf(stdout, "Error connecting to localhost: %s\n", ssh_get_error(ctx->sess));
+        return PK_ERR_GENERROR;
     }
 
     /* After opening the connection - verify it */
-    verify_knownhost(ctx->session);
+    verify_knownhost(ctx->sess);
 }
 
 /** Safely frees a context from memory **/

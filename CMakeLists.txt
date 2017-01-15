@@ -13,8 +13,9 @@ project(poke)
 
 # Define files for libpoke
 set(LIBPOKE_SRC
-        lib/pk_parse.c
-        lib/poke.c)
+        lib/parser.c
+        lib/sessions.c
+        lib/keywoman.c)
 
 # Define libpoke library with dependencies
 add_library(libpoke STATIC ${LIBPOKE_SRC})

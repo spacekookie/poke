@@ -17,20 +17,25 @@
 
 /**************************************************************************************/
 
+
 #ifndef POKE_PK_H
 #define POKE_PK_H
 
 
 /** A few import statements */
 #include <dtree/dtree.h>
+#include <libssh/libssh.h>
 
 
 /*********** ERROR MESSAGE DEFINITIONS ***********/
+
+
 #define PK_ERR_SUCCESS          0
 #define PK_ERR_GENERROR         1
 #define PK_ERR_MALLOC_FAILED    2
 #define PK_ERR_INVALID_PARAMS   3
 #define PK_ERR_NOT_FOUND        4
+#define PK_ERR_INIT_FAILED      5
 
 
 /*********** CONFIG PARSER FUNCTION DEFINITIONS ***********/
@@ -93,5 +98,23 @@ int pk_parse_free(pk_parse_ctx *ctx);
 
 /*********** POKE SESSION MANAGER FUNCTION DEFINITIONS ***********/
 
+typedef struct pk_sm_ctx {
+    ssh_session     sess;
+
+    pk_parse_hst    *host;
+    time_t          creation, updated;
+} pk_sm_ctx;
+
+/** Initialise a new session to a specific host - does not connect */
+int pk_sm_init(pk_sm_ctx *ctx, pk_parse_hst *host);
+
+/** Open an ssh connection with the host */
+int pk_sm_start(pk_sm_ctx *ctx);
+
+/** */
+int pk_sm_stop(pk_sm_ctx *ctx);
+
+/** Free all allocated memory from */
+int pk_sm_free(pk_sm_ctx *ctx);
 
 #endif // POKE_PK_H

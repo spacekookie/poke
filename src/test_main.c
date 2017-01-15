@@ -8,10 +8,7 @@ int main(void)
     printf("=== Welcome to poke ===\n");
 
     /* Create a context for a test path */
-    // pk_dm_ctx ctx;
     pk_parse_ctx parser;
-
-    // pk_dm_init(&ctx, TEST_PATH);
 
     /* Parse the ssh config */
     pk_parse_init(&parser, TEST_PATH);
@@ -23,6 +20,15 @@ int main(void)
 
     if(err == 0) {
         printf("'%s': %s@%s\n", host->host_id, host->username, host->hostname);
+
+        /* Initialise a new session to work with */
+        pk_sm_ctx ctx;
+        pk_sm_init(&ctx, host);
+
+        pk_sm_start(&ctx);
+
+        /* Free memory correctly */
+        pk_sm_free(&ctx);
     }
 
     pk_parse_free(&parser);
