@@ -5,6 +5,9 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c11")
 set(CMAKE_BUILD_TYPE Debug)
 
+# Add libdtree as a subfolder for linking later
+add_subdirectory(libdtree)
+
 # Define our project for future reference
 project(poke)
 
@@ -18,6 +21,7 @@ add_library(libpoke STATIC ${LIBPOKE_SRC})
 
 # Add some libraries to libpoke
 target_link_libraries(libpoke
+        libdyntree
         config
         ssh)
 

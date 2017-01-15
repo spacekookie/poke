@@ -1,0 +1,3 @@
+[submodule "libdtree"]
+	path = libdtree
+	url = https://github.com/reepass/libdtree.git
