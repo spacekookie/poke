@@ -1,4 +1,4 @@
-/* libpoke - pk_parse.h
+/* libpoke - poke.h
  *
  * (c) 2016           Katharina Sabel.
  * Authors:           Katharina 'spacekookie' Sabel
@@ -17,12 +17,23 @@
 
 /**************************************************************************************/
 
-#ifndef POKE_PK_PARSE_H
-#define POKE_PK_PARSE_H
+#ifndef POKE_PK_H
+#define POKE_PK_H
 
-#include "pk.h"
 
+/** A few import statements */
 #include <dtree/dtree.h>
+
+
+/*********** ERROR MESSAGE DEFINITIONS ***********/
+#define PK_ERR_SUCCESS          0
+#define PK_ERR_GENERROR         1
+#define PK_ERR_MALLOC_FAILED    2
+#define PK_ERR_INVALID_PARAMS   3
+#define PK_ERR_NOT_FOUND        4
+
+
+/*********** CONFIG PARSER FUNCTION DEFINITIONS ***********/
 
 
 typedef struct pk_parse_hst
@@ -76,4 +87,11 @@ int pk_parse_print(pk_parse_ctx *ctx);
 /** Free parser context from memory completely */
 int pk_parse_free(pk_parse_ctx *ctx);
 
-#endif
+
+/*********** CONFIG GENERATOR FUNCTION DEFINITIONS ***********/
+
+
+/*********** POKE SESSION MANAGER FUNCTION DEFINITIONS ***********/
+
+
+#endif // POKE_PK_H

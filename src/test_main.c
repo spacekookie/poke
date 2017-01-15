@@ -1,13 +1,7 @@
-#include <poke/pk.h>
-#include <poke/pk_parse.h>
-
-#include <stdlib.h>
+#include <poke.h>
 #include <stdio.h>
-#include <string.h>
-#include <time.h>
 
 #define TEST_PATH "/home/spacekookie/.ssh/config"
-
 
 int main(void)
 {
@@ -24,9 +18,13 @@ int main(void)
 
     pk_parse_load(&parser);
 
-    pk_parse_print(&parser);
+    pk_parse_hst *host;
+    int err = pk_parse_query(&parser, &host, "agamemnon");
 
-    /* Clean up and quit */
-    // pk_dm_free(&ctx);
+    if(err == 0) {
+        printf("'%s': %s@%s\n", host->host_id, host->username, host->hostname);
+    }
+
+    pk_parse_free(&parser);
     return 0;
 }

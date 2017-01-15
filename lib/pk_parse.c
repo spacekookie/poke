@@ -1,4 +1,5 @@
-#include <poke/pk_parse.h>
+#include <poke.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
@@ -192,8 +193,6 @@ int pk_parse_load(pk_parse_ctx *ctx)
         /** Update line position */
         position += 1;
 
-        printf("Line %d: %s\n", position, pch);
-
         /** First trim the input for easy matching */
         char trimmed[strlen(pch) + 1];
         pk_string_trim(pch, trimmed);
@@ -301,15 +300,19 @@ int pk_parse_query(pk_parse_ctx *ctx, pk_parse_hst **data, const char *hostname)
     int i;
 
     /** For every host - alloc on heap and then copy pointer */
-    for(i = 0; i < HOST_BUFFER_SIZE; i++) {
+    for(i = 0; i < ctx->count; i++) {
+
+        // printf("%s VS %s\n", hostname, ctx->hosts[i].host_id);
 
         /** Check if the hostname for our entry is correct */
-        if(strcmp(ctx->hosts[i].hostname, hostname) == 0)
+        if(strcmp(ctx->hosts[i].host_id, hostname) == 0) {
             *data = &ctx->hosts[i];
+            return PK_ERR_SUCCESS;
+
+        }
     }
 
-
-    return PK_ERR_SUCCESS;
+    return PK_ERR_NOT_FOUND;
 }
 
 int pk_parse_print(pk_parse_ctx *ctx)
@@ -333,8 +336,8 @@ int pk_parse_free(pk_parse_ctx *ctx)
     dt_err err = dtree_free(ctx->struc);
     if(err) return PK_ERR_GENERROR;
 
+    free(ctx->ssh_path);
     free(ctx->hosts);
-    free(ctx);
 
     return PK_ERR_SUCCESS;
 }
