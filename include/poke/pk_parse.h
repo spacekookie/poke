@@ -42,11 +42,9 @@ typedef struct pk_parse_hst
 typedef struct pk_parse_ctx
 {
     char          *ssh_path;
-    char          *ssh_config;
 
-    char          *raw_data;
-    pk_parse_hst  **hosts;
-    int           hsize, hused;
+    pk_parse_hst  *hosts;
+    int           count;
 
     /*
     * Store some metadata about the cfg.
@@ -70,6 +68,9 @@ int pk_parse_dump(pk_parse_ctx *ctx);
 
 /** Find information in the token stream for access */
 int pk_parse_query(pk_parse_ctx *ctx, pk_parse_hst **data, const char *hostname);
+
+/** Print all the hosts in a context */
+int pk_parse_print(pk_parse_ctx *ctx);
 
 /** Free parser context from memory completely */
 int pk_parse_free(pk_parse_ctx *ctx);

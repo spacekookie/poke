@@ -39,6 +39,30 @@ void pk_string_parse(const char *src, char *payload, size_t payload_len, const c
 }
 
 
+void print_host_struct(pk_parse_hst *host)
+{
+    printf("=== Host: %s ===\n", host->host_id);
+    printf("\tHostName: %s\n", host->hostname);
+    printf("\tUser: %s\n", host->username);
+    printf("\tPort: %s\n", host->port);
+    printf("\tID Only: %s\n", host->id_only);
+    printf("\tID File: %s\n", host->id_file);
+    printf("\n");
+    printf("\tPK Updated: %s\n", host->pk_updated);
+    printf("\tPK Blacklisted: %s\n", host->pk_blacklist);
+
+    size_t host_len = strlen(host->host_id) + 9 /* Beginning */ + 4 /* End */;
+    int i;
+    for(i = 0; i <= host_len; i++) {
+        printf("=");
+    }
+
+    /* Then just add new lines */
+    printf("\n\n");
+
+}
+
+
 /*********************************************************************************************/
 
 
@@ -89,7 +113,7 @@ int pk_parse_load(pk_parse_ctx *ctx)
     CHECK_CTX
 
     /** Open config and seek through for size */
-    FILE *f = fopen(ctx->ssh_config, "r");
+    FILE *f = fopen(ctx->ssh_path, "r");
     fseek(f, 0, SEEK_END);
     size_t cfg_size = (size_t) ftell(f);
     fseek(f, 0, SEEK_SET);  //same as rewind(f);
@@ -129,6 +153,7 @@ int pk_parse_load(pk_parse_ctx *ctx)
 
         /** If protected macros that assign values to current host */
         PK_DATA_WRITER(trimmed, hosts[host_ctr].host_id, HOST_ID)
+
         PK_DATA_WRITER(trimmed, hosts[host_ctr].id_only, ID_ONLY)
         PK_DATA_WRITER(trimmed, hosts[host_ctr].id_file, ID_FILE)
         PK_DATA_WRITER(trimmed, hosts[host_ctr].username, USER)
@@ -162,22 +187,12 @@ int pk_parse_load(pk_parse_ctx *ctx)
     }
 
     /** Then allocate a buffer of the correct size */
-    ctx->hosts = (pk_parse_hst**) malloc(sizeof(pk_parse_hst*) * count);
+    ctx->hosts = (pk_parse_hst*) malloc(sizeof(pk_parse_hst) * count);
     if(ctx->hosts == NULL) return PK_ERR_MALLOC_FAILED;
 
-    /** For every host - alloc on heap and then copy pointer */
-    for(i = 0; i < HOST_BUFFER_SIZE; i++) {
-        if(strlen(hosts[i].hostname) == 0) continue;
-
-        pk_parse_hst *host = (pk_parse_hst*) malloc(sizeof(pk_parse_hst) * 1);
-        if(host == NULL) return PK_ERR_MALLOC_FAILED;
-
-        /** Copy memoy from stack to heap */
-        memcpy(host, &hosts[i], sizeof(pk_parse_hst));
-
-        /** Then copy pointer to heap array */
-        ctx->hosts[i] = host;
-    }
+    /** Copy array over and number of items */
+    memcpy(ctx->hosts, hosts, sizeof(pk_parse_hst) * count);
+    ctx->count = count;
 
     /** Return with glorious success */
     return PK_ERR_SUCCESS;
@@ -188,7 +203,13 @@ int pk_parse_dump(pk_parse_ctx *ctx)
 {
     CHECK_CTX
 
-    if(ctx->raw_data) free(ctx->raw_data);
+    int i;
+    for(i = 0; i < ctx->count; i++) {
+        pk_parse_hst *hst = &ctx->hosts[i];
+        free(hst);
+    }
+
+    free(ctx->hosts);
 
     return PK_ERR_SUCCESS;
 }
@@ -198,6 +219,29 @@ int pk_parse_query(pk_parse_ctx *ctx, pk_parse_hst **data, const char *hostname)
 {
     CHECK_CTX
 
+    int i;
+
+    /** For every host - alloc on heap and then copy pointer */
+    for(i = 0; i < HOST_BUFFER_SIZE; i++) {
+
+        /** Check if the hostname for our entry is correct */
+        if(strcmp(ctx->hosts[i].hostname, hostname) == 0)
+            *data = &ctx->hosts[i];
+    }
+
+
+    return PK_ERR_SUCCESS;
+}
+
+int pk_parse_print(pk_parse_ctx *ctx)
+{
+
+    int i;
+    for(i = 0; i < 128; i++) {
+        if(strlen(ctx->hosts[i].hostname) == 0) continue;
+        print_host_struct(&ctx->hosts[i]);
+    }
+
     return PK_ERR_SUCCESS;
 }
 
@@ -205,14 +249,6 @@ int pk_parse_query(pk_parse_ctx *ctx, pk_parse_hst **data, const char *hostname)
 int pk_parse_free(pk_parse_ctx *ctx)
 {
     CHECK_CTX
-
-    if(ctx->raw_data) free(ctx->raw_data);
-
-    int i;
-    for(i = 0; i < ctx->hused; i++) {
-        pk_parse_hst *hst = ctx->hosts[i];
-        free(hst);
-    }
 
     free(ctx->hosts);
     free(ctx);
