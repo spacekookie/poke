@@ -259,7 +259,7 @@ int pk_parse_print(pk_parse_ctx *ctx)
 {
 
     int i;
-    for(i = 0; i < 128; i++) {
+    for(i = 0; i < ctx->count; i++) {
         if(strlen(ctx->hosts[i].hostname) == 0) continue;
         print_host_struct(&ctx->hosts[i]);
     }
