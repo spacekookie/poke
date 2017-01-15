@@ -11,14 +11,15 @@ project(poke)
 # Define files for libpoke
 set(LIBPOKE_SRC
         lib/pk_parse.c
-        lib/pk_sessions.c
-        lib/pk_generate.c)
+        lib/poke.c)
 
 # Define libpoke library with dependencies
 add_library(libpoke STATIC ${LIBPOKE_SRC})
 
 # Add some libraries to libpoke
-target_link_libraries(libpoke ssh)
+target_link_libraries(libpoke
+        config
+        ssh)
 
 # Officially add our file scopes
 target_include_directories(libpoke PUBLIC "include")
