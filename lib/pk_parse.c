@@ -39,6 +39,49 @@ void pk_string_parse(const char *src, char *payload, size_t payload_len, const c
 }
 
 
+int count_lines(const char *buffer)
+{
+    int i;
+    int count = 0;
+
+    for(i = 0; i < strlen(buffer); i++) {
+        char c = buffer[i];
+        if(strcmp(&c, "\n") == 0) count++;
+    }
+
+    return count;
+}
+
+
+void append_char(char *buffer, int *ctr, char c)
+{
+    sprintf(buffer + (*ctr), "%c", c);
+}
+
+
+void pk_expand_newlines(char buffer[], const char *source)
+{
+    int i;
+    int insert = 0;
+
+    for(i = 0; i < strlen(source); i++) {
+        char c = source[i];
+
+        /** We look-ahead of +1 to see if newline */
+        if(c == '\n') {
+            sprintf(buffer + insert, " \n");
+            insert += 2;
+
+            continue;
+        }
+
+        sprintf(buffer + insert, "%c", c);
+        insert++;
+    }
+
+}
+
+
 void print_host_struct(pk_parse_hst *host)
 {
     printf("=== Host: %s ===\n", host->host_id);
@@ -123,10 +166,17 @@ int pk_parse_load(pk_parse_ctx *ctx)
     fseek(f, 0, SEEK_SET);  //same as rewind(f);
 
     /** Buffer the config in an array */
-    char str[cfg_size + 1];
-    memset(str, 0, cfg_size + 1);
-    fread(str, cfg_size, 1, f);
+    char tmp[cfg_size + 1];
+    memset(tmp, 0, cfg_size + 1);
+    fread(tmp, cfg_size, 1, f);
     fclose(f);
+
+    /** Expand buffer so newlines aren't empty */
+    int lines = count_lines(tmp);
+    char str[cfg_size + 1 + lines];
+    memset(str, 0, cfg_size + 1 + lines);
+    pk_expand_newlines(str, tmp);
+
 
     /** Create some stack variables to parse with */
     char *pch;
@@ -141,6 +191,8 @@ int pk_parse_load(pk_parse_ctx *ctx)
 
         /** Update line position */
         position += 1;
+
+        printf("Line %d: %s\n", position, pch);
 
         /** First trim the input for easy matching */
         char trimmed[strlen(pch) + 1];
