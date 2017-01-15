@@ -104,6 +104,10 @@ int pk_parse_init(pk_parse_ctx *ctx, const char *path)
     if(ctx->ssh_path == NULL) return PK_ERR_MALLOC_FAILED;
     strcpy(ctx->ssh_path, path);
 
+    /** Allocate a new dtree root node */
+    dt_err err = dtree_malloc(&ctx->struc);
+    if(err) return PK_ERR_MALLOC_FAILED;
+
     return PK_ERR_SUCCESS;
 }
 
@@ -126,7 +130,7 @@ int pk_parse_load(pk_parse_ctx *ctx)
 
     /** Create some stack variables to parse with */
     char *pch;
-    int ctr = 0;
+    int position = 0;
     int host_ctr = -1;
     pk_parse_hst hosts[HOST_BUFFER_SIZE];
     memset(hosts, 0, sizeof(pk_parse_hst) * HOST_BUFFER_SIZE);
@@ -134,6 +138,9 @@ int pk_parse_load(pk_parse_ctx *ctx)
     /** Read first token and then iterate over tokens */
     pch = strtok (str,"\n");
     while (pch != NULL) {
+
+        /** Update line position */
+        position += 1;
 
         /** First trim the input for easy matching */
         char trimmed[strlen(pch) + 1];
@@ -149,6 +156,23 @@ int pk_parse_load(pk_parse_ctx *ctx)
             strcpy(hosts[host_ctr].pk_blacklist, "no");
             strcpy(hosts[host_ctr].port, "22");
             strcpy(hosts[host_ctr].id_only, "no");
+
+            /** Save new position and hostname as node list (pair) child */
+            dtree *node;
+            dt_err err;
+
+            err = dtree_addlist(ctx->struc, &node);
+            if(err) return PK_ERR_MALLOC_FAILED;
+
+            dtree *key, *val;
+            err = dtree_addpair(node, &key, &val);
+            if(err) return PK_ERR_GENERROR;
+
+            err = dtree_addliteral(key, trimmed);
+            if(err) return PK_ERR_GENERROR;
+
+            err = dtree_addnumeral(val, position);
+            if(err) return PK_ERR_GENERROR;
         }
 
         /** If protected macros that assign values to current host */
@@ -203,13 +227,11 @@ int pk_parse_dump(pk_parse_ctx *ctx)
 {
     CHECK_CTX
 
-    int i;
-    for(i = 0; i < ctx->count; i++) {
-        pk_parse_hst *hst = &ctx->hosts[i];
-        free(hst);
-    }
-
     free(ctx->hosts);
+
+    /** Dump all child data without removing the root node */
+    dt_err err = dtree_resettype(ctx->struc);
+    if(err) return PK_ERR_GENERROR;
 
     return PK_ERR_SUCCESS;
 }
@@ -249,6 +271,10 @@ int pk_parse_print(pk_parse_ctx *ctx)
 int pk_parse_free(pk_parse_ctx *ctx)
 {
     CHECK_CTX
+
+    /** Free the dtree node structure first */
+    dt_err err = dtree_free(ctx->struc);
+    if(err) return PK_ERR_GENERROR;
 
     free(ctx->hosts);
     free(ctx);

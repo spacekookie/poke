@@ -22,6 +22,9 @@
 
 #include "pk.h"
 
+#include <dtree/dtree.h>
+
+
 typedef struct pk_parse_hst
 {
     char    host_id[128];
@@ -41,19 +44,17 @@ typedef struct pk_parse_hst
 
 typedef struct pk_parse_ctx
 {
-    char          *ssh_path;
+    char            *ssh_path;
 
-    pk_parse_hst  *hosts;
-    int           count;
+    pk_parse_hst    *hosts;
+    dtree           *struc;
+    int             count;
 
-    /*
-    * Store some metadata about the cfg.
-    * Defined as "#poke (...)"
-    */
-    int           pk_version;
-    long          pk_update_t;
-    char          *pk_key_t;
-    int           pk_key_len;
+    /* Cfg metadata as  #poke=<field> */
+    int             pk_version;
+    long            pk_update_t;
+    char            *pk_key_t;
+    int             pk_key_len;
 } pk_parse_ctx;
 
 
