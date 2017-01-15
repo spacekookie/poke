@@ -220,7 +220,12 @@ int pk_parse_load(pk_parse_ctx *ctx)
             err = dtree_addpair(node, &key, &val);
             if(err) return PK_ERR_GENERROR;
 
-            err = dtree_addliteral(key, trimmed);
+
+            char literal[128];
+            memset(literal, 0, sizeof(char) * 128);
+            pk_string_parse(trimmed, literal, 128, HOST_ID);
+
+            err = dtree_addliteral(key, literal);
             if(err) return PK_ERR_GENERROR;
 
             err = dtree_addnumeral(val, position);
