@@ -49,8 +49,13 @@ int pk_sm_start(pk_sm_ctx *ctx)
 
     /* Initialise our SSH session with some basic settings */
     ret = ssh_options_set(ctx->sess, SSH_OPTIONS_HOST, ctx->host->hostname);
+    if(ret) return ret;
+
     ret = ssh_options_set(ctx->sess, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
+    if(ret) return ret;
+
     ret = ssh_options_set(ctx->sess, SSH_OPTIONS_PORT, &ctx->host->port);
+    if(ret) return ret;
 
     /* Attempt to open a connection - carefully */
     ret =  ssh_connect(ctx->sess);
