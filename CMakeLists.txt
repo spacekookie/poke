@@ -34,7 +34,6 @@ target_include_directories(libpoke PRIVATE "lib")
 
 # Define files for libpoke
 set(POKE_SRC
-        src/pokeopt.c
         src/main.c)
 
 # Then add the executable
