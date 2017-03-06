@@ -5,18 +5,22 @@
 
 #include <argp.h>
 
+/* Declare const strings with metadata */
 const char *argp_program_version = "Poke 0.6b";
 const char *argp_program_bug_address = "<kookie@spacekookie.de>";
+
+
 static char doc[] = "Poke -- a powerful ssh utility";
 static char args_doc[] = "SERVER";
 
 static struct argp_option options[] = { {"generate",  'g', 0,      0,  "Generate a new key for the provided server" } };
 
 struct arguments {
-    char *args[1];
+    char *server;
     int generate;
 };
 
+/** This function parses arguments into our carrier struct  */
 static error_t parse_opt (int key, char *arg, struct argp_state *state)
 {
     struct arguments *arguments = state->input;
@@ -27,18 +31,12 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state)
             break;
 
         case ARGP_KEY_ARG:
-            if (state->arg_num >= 2)
-                argp_usage (state);
-
-            arguments->args[state->arg_num] = arg;
-
+            if (state->arg_num >= 2) argp_usage(state);
+            arguments->server = arg;
             break;
 
         case ARGP_KEY_END:
-            if (state->arg_num < 1)
-
-                /* Not enough arguments. */
-                argp_usage (state);
+            if (state->arg_num < 1) argp_usage(state);
             break;
 
         default:
@@ -47,7 +45,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state)
     return 0;
 }
 
-/* Our argp parser. */
+/* Define the parser struct with all data */
 static struct argp argp = { options, parse_opt, args_doc, doc };
 
 int main (int argc, char **argv)
@@ -57,7 +55,7 @@ int main (int argc, char **argv)
     argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
     /* Print out the options and stuff */
-    printf ("Server = %s\nGenerate = %s\n", arguments.args[0], arguments.generate ? "yes" : "no");
+    printf ("Server = %s\nGenerate = %s\n", arguments.server, arguments.generate ? "yes" : "no");
 
     exit (0);
 }
