@@ -1,7 +1,4 @@
-![Poke Logo](https://raw.githubusercontent.com/spacekookie/ssh-poke/master/shell_sc_313.png)
-
-# Poke
-
+![Poke Logo](shell_sc_313.png)
 
 `poke` is the most anoyingly awesome, most powerful and most extendable [ssh][ssh] host and key manager written in C. It contains 25% more SSH than the leading competitor.
 
