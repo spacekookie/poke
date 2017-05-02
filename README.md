@@ -54,12 +54,12 @@ For people who actually care (this is all in alpha anyways :) )
 We all have special setups and shortcuts and scripts and...
 And then we log into a client machine just to realise that their .vimrc is non-existent and by default `ll` is mapped to `cowsay "The fuck?"`. Now there is a solution to this!
 
-Simply configure ghost with a configuration in which you define what things you want to take with you when working on servers. You can even blacklist servers to NOT take certain things with you. This includes your fishrc, your aliases and even custom scripts from a path of your choosing!
+Simply configure poke with a configuration in which you define what things you want to take with you when working on servers. You can even blacklist servers to NOT take certain things with you. This includes your fishrc, your aliases and even custom scripts from a path of your choosing!
 
 And the best thing? After initial configuration, you don't have to do a thing!
 
 ```bash
-$> ghost super_server
+$> poke super_server
 ```
 
 And after you're done all the temporary stuff will be removed from the server again...as if you were never there!
@@ -68,7 +68,7 @@ And after you're done all the temporary stuff will be removed from the server ag
 
 Yes...we should all have unique keys for every server. And yes, we should totally change them from time to time. And no, nobody *ever* does so. Because it's time consuming and boring. Until now!
 
-With a simple parameter ghost will not only connect to a server but also check the age of the key on said server. And if the key is too old generate a new one, swap out the public keys, test the key in the background and only after successful connection delete the old keys.
+With a simple parameter poke will not only connect to a server but also check the age of the key on said server. And if the key is too old generate a new one, swap out the public keys, test the key in the background and only after successful connection delete the old keys.
 
 This way you will always be in excellent shape with your key management. With next to zero effort on your behalf!
 
