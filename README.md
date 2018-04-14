@@ -1,4 +1,4 @@
-# Poke
+# 👉 POKE
 
 A conveniently easy to use ssh key generator and manager.
 
