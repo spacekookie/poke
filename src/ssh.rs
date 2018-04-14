@@ -16,3 +16,14 @@ pub fn generate_key(path: &str, name: &str) {
 
     print!("{}", String::from_utf8(foo.stdout).unwrap());
 }
+
+/// Register a new key with a remote server
+pub fn send_key(file_path: &str, server: &str) {
+    let foo = Command::new("scp")
+        .arg(file_path)
+        .arg(&format!("{}:~/.ssh", server))
+        .output()
+        .expect("Failed to copy key to server!");
+
+    println!("{}", String::from_utf8(foo.stdout).unwrap());
+}
