@@ -20,7 +20,8 @@ fn main() {
             SubCommand::with_name("generate")
                 .alias("g")
                 .about("Generate new keys for this computer for a specific server")
-                .arg(Arg::with_name("name").required(true)),
+                .arg(Arg::with_name("name").required(true))
+                .arg(Arg::with_name("addr").required(true)),
         );
 
     match app.get_matches().subcommand() {
@@ -30,7 +31,15 @@ fn main() {
             }
 
             let name = m.value_of("name").unwrap();
-            ssh::generate_key(get_ssh_dir().to_str().unwrap(), name);
+            let addr = m.value_of("addr").unwrap();
+            ssh::generate_key(&get_ssh_dir().to_str().unwrap(), &format!("{}_local", name));
+            ssh::send_key(
+                get_ssh_dir()
+                    .join(&format!("{}_local.pub", &name))
+                    .to_str()
+                    .unwrap(),
+                &addr,
+            );
         }
         _ => {}
     }
