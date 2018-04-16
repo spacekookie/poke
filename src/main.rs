@@ -18,6 +18,7 @@ use std::{fs, path::PathBuf};
 fn main() {
     let m = cli::create().get_matches();
 
+    /* In this block we can unwrap quite viciously because clap will protect us */
     match m.subcommand() {
         ("setup", Some(m)) => handle_setup(m),
         ("load", Some(m)) => handle_load(m),
@@ -43,7 +44,9 @@ fn handle_generate(matches: &ArgMatches) {
     );
 }
 
-fn handle_setup(matches: &ArgMatches) {}
+fn handle_setup(matches: &ArgMatches) {
+    let path = matches.value_of("path").unwrap();
+}
 
 fn handle_load(matches: &ArgMatches) {}
 

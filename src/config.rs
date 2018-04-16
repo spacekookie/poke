@@ -24,20 +24,19 @@ impl Config {
             experimental: false,
             renew_keys: false,
         }).unwrap();
-        return Config::load(path);
+        return Config::load(path).unwrap();
     }
 
-    /// Load an existing config int a struct
-    pub fn load(path: &str) -> Config {
+    /// Try to load an existing configuration
+    pub fn load(path: &str) -> Option<Config> {
         return match Path::new(path).exists() {
             true => {
                 let mut content = String::new();
                 let mut f = File::open(path).unwrap();
                 f.read_to_string(&mut content).unwrap();
-                serde_toml::from_str(&content).unwrap()
-            }
-
-            false => Config::create_empty(path),
+                Some(serde_toml::from_str(&content).unwrap())
+            },
+            false => None,
         };
     }
 

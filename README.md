@@ -1,4 +1,4 @@
-# 👉🏽 point poke [![](https://travis-ci.org/spacekookie/poke.svg?branch=master)](https://travis-ci.org/spacekookie/poke) [![](https://ci.appveyor.com/api/projects/status/w29yfx0q5kls3013?svg=true)](https://ci.appveyor.com/project/spacekookie/poke)
+# 👉🏽 poke [![](https://travis-ci.org/spacekookie/poke.svg?branch=master)](https://travis-ci.org/spacekookie/poke) [![](https://ci.appveyor.com/api/projects/status/w29yfx0q5kls3013?svg=true)](https://ci.appveyor.com/project/spacekookie/poke)
 
 A conveniently easy to use ssh key generator and manager.
 
