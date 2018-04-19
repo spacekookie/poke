@@ -1,6 +1,12 @@
 //! An ssh runner utility
 
-use std::process::Command;
+use std::{env::home_dir, path::PathBuf, process::Command};
+
+pub fn get_directory() -> PathBuf {
+    let mut base = PathBuf::from(home_dir().unwrap());
+    base = base.join(".ssh").join("poke");
+    return base;
+}
 
 /// Generate a new key and store it in $USER/.ssh/poke
 pub fn generate_key(path: &str, name: &str) {

@@ -7,8 +7,14 @@ repository = "https://github.com/spacekookie/poke"
 license = "MPL-2.0"
 
 [dependencies]
-clap = { version = "^2.0", features = ["wrap_help"] }
-lockchain-core = "*"
+clap = { version = "2.0", features = ["wrap_help"] }
+rpassword = "2.0"
+colored = "1.0"
+
+lockchain-core = "0.2"
+# human-panic = "0.4"
+question = "0.2.1"
+
 
 serde = "^1.0"
 serde_derive = "^1.0"

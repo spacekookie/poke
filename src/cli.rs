@@ -1,6 +1,6 @@
 //! Small utility modules which initialises and defines the CLI parsing tree
 
-use clap::{App, Arg, ArgMatches, SubCommand};
+use clap::{App, Arg, SubCommand};
 
 const APP_NAME: &'static str = env!("CARGO_PKG_NAME");
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -19,7 +19,13 @@ pub fn create() -> App<'static, 'static> {
                 .alias("s")
                 .about("Setup poke keystore backend. This can either crate a fresh \
                         keystore or link into an existing one.")
-                .arg(Arg::with_name("path").short("p").long("store-path").display_order(1).help("Provide the path to a poke keystore")),
+                .arg(Arg::with_name("path")
+                        .short("p")
+                        .long("store-path")
+                        .takes_value(true)
+                        .required(true)
+                        .display_order(1)
+                        .help("Provide the path to a poke keystore")),
         )
         .subcommand(
             SubCommand::with_name("generate")

@@ -1,6 +1,6 @@
 //! SSH Keystore module using lockchain
 
-use lockchain::{record::Record, Payload, Vault};
+use lockchain::{Payload, Vault, record::Record};
 
 /// The poke keystore
 pub(crate) struct KeyStore {

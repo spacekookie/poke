@@ -4,13 +4,11 @@
 //! metadata fields about the keystore as well as key-timeouts
 //! and...stuff
 
-use std::{fs::File,
-          io::{Read, Write},
-          path::Path};
+use std::{fs::File, io::{Read, Write}, path::Path};
 use toml as serde_toml;
 
 #[derive(Serialize, Deserialize)]
-struct Config {
+pub struct Config {
     pub keystore: Option<String>,
     pub experimental: bool,
     pub renew_keys: bool,
@@ -19,11 +17,11 @@ struct Config {
 impl Config {
     /// Store an empty config to disk
     pub fn create_empty(path: &str) -> Config {
-        let toml = serde_toml::to_string(&Config {
+        Config {
             keystore: None,
             experimental: false,
             renew_keys: false,
-        }).unwrap();
+        }.save(path);
         return Config::load(path).unwrap();
     }
 
@@ -35,7 +33,7 @@ impl Config {
                 let mut f = File::open(path).unwrap();
                 f.read_to_string(&mut content).unwrap();
                 Some(serde_toml::from_str(&content).unwrap())
-            },
+            }
             false => None,
         };
     }
