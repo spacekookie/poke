@@ -1,6 +1,6 @@
 //! SSH Keystore module using lockchain
 
-use lockchain::{Payload, Vault, record::Record};
+use lockchain::{record::Record, Payload, Vault};
 
 /// The poke keystore
 pub(crate) struct KeyStore {
@@ -34,7 +34,7 @@ impl KeyStore {
 
     /// Get the current key for a certain domain
     pub fn get_key(&mut self, name: &str) -> Option<String> {
-        let r: &mut Record = self.vault.records.get_mut(name).unwrap();
+        let r: &mut Record = self.vault.records.get_mut(name)?;
         let payload = r.get_data("key");
 
         return match payload {

@@ -28,7 +28,7 @@ use std::{env, fs};
 
 fn main() {
     /* This makes panic! pretty */
-    setup_panic!();
+    // setup_panic!();
 
     /* Define our CLI App */
     let m = cli::create().get_matches();
@@ -64,17 +64,18 @@ fn handle_generate(matches: &ArgMatches) {
 
 fn handle_setup(matches: &ArgMatches) {
     let path = String::from(matches.value_of("path").unwrap());
-
-    /* Create or load config */
-    let mut cfg = match Config::load(&format!(
+    let cfg_path = &format!(
         "{}/.config/poke.toml",
         env::home_dir().unwrap().to_str().unwrap()
-    )) {
-        None => Config::create_empty(&path),
+    );
+
+    /* Create or load config */
+    let mut cfg = match Config::load(cfg_path) {
+        None => Config::create_empty(&cfg_path),
         Some(cfg) => cfg,
     };
 
-    if cfg.keystore.is_none() {
+    if cfg.keystore.is_some() {
         let cont = Question::new("Keystore already registered. Change location?")
             .default(Answer::NO)
             .show_defaults()
@@ -86,7 +87,10 @@ fn handle_setup(matches: &ArgMatches) {
         }
     }
 
-    cfg.keystore = Some(path.clone());
+    /* Store the absolute path to the keystore */
+    let p_slice = fs::canonicalize(&path).unwrap();
+    cfg.keystore = Some(String::from(p_slice.to_str().unwrap()));
+    cfg.save(cfg_path);
 
     /* Get a desired user password */
     let pass = rpassword::prompt_password_stdout("Set a keystore password: ").unwrap();

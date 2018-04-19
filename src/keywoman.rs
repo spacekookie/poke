@@ -21,7 +21,10 @@ use std::{io::Read, path::PathBuf};
 /// It can also only be written once without triggering
 /// th `poke panic` command.
 pub fn generate_root(ks_path: String, ks_pw: String) -> String {
-    let mut ks = KeyStore::load(&ks_path, &ks_pw).unwrap();
+    let mut ks = KeyStore::load(&ks_path, &ks_pw).unwrap_or_else(|| {
+        KeyStore::new(&ks_path, &ks_pw).expect("Failed to create new keystore!")
+    });
+
     if let Some(_) = ks.get_key("root@everybody") {
         eprintln!(
             "{}",
