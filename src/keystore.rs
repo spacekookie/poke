@@ -30,6 +30,7 @@ impl KeyStore {
     pub fn insert_key(&mut self, name: &str, key: String) {
         self.vault.add_record(name, "keys", Vec::new());
         self.vault.add_data(name, "key", Payload::Text(key));
+        self.vault.sync();
     }
 
     /// Get the current key for a certain domain
