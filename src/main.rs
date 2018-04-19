@@ -63,19 +63,11 @@ fn handle_generate(matches: &ArgMatches) {
 }
 
 fn handle_setup(matches: &ArgMatches) {
-    let path = String::from(matches.value_of("path").unwrap());
-    let cfg_path = &format!(
-        "{}/.config/poke.toml",
-        env::home_dir().unwrap().to_str().unwrap()
-    );
+    let ks_path = String::from(matches.value_of("path").unwrap());
 
-    /* Create or load config */
-    let mut cfg = match Config::load(cfg_path) {
-        None => Config::create_empty(&cfg_path),
-        Some(cfg) => cfg,
-    };
-
-    if cfg.keystore.is_some() {
+    /* Either create or load existing config */
+    let mut cfg = Config::load().unwrap_or_else(|| Config::create_empty());
+    cfg.if_no_keystore(|| {
         let cont = Question::new("Keystore already registered. Change location?")
             .default(Answer::NO)
             .show_defaults()
@@ -85,19 +77,25 @@ fn handle_setup(matches: &ArgMatches) {
             println!("Aborting re-setup!");
             process::exit(2);
         }
-    }
+    });
 
-    /* Store the absolute path to the keystore */
-    let p_slice = fs::canonicalize(&path).unwrap();
-    cfg.keystore = Some(String::from(p_slice.to_str().unwrap()));
-    cfg.save(cfg_path);
+    /* Set the new keystore path & sync */
+    cfg.set_keystore(&ks_path);
+    cfg.sync();
 
     /* Get a desired user password */
     let pass = rpassword::prompt_password_stdout("Set a keystore password: ").unwrap();
-    let pub_path = keywoman::generate_root(path, pass);
+    let pass_confirm = rpassword::prompt_password_stdout("Confirm the password: ").unwrap();
+    if pass != pass_confirm {
+        eprintln!("{}", "The two passwords did not match!".red());
+        process::exit(2);
+    }
 
-    println!("{}", "✨ A new keystore was generated for you ✨".green());
+    let pub_path = keywoman::generate_root(ks_path, pass);
+
+    /* Print about our success */
     println!("");
+    println!("{}", "✨ A new keystore was generated for you ✨".green());
     println!("Your root public key can be found here: '{}'", pub_path);
 }
 

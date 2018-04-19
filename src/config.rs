@@ -4,33 +4,44 @@
 //! metadata fields about the keystore as well as key-timeouts
 //! and...stuff
 
+use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
-use std::{fs::{File, OpenOptions},
-          path::Path};
+use std::{env, path::Path};
 
 use toml as serde_toml;
 
+// This is hardcoded for now – assumes UNIX system
+const CONFIG_PATH: &'static str = ".config/poke.toml";
+
 #[derive(Serialize, Deserialize)]
 pub struct Config {
-    pub keystore: Option<String>,
-    pub experimental: bool,
-    pub renew_keys: bool,
+    keystore: Option<String>,
+    experimental: bool,
+    renew_keys: bool,
 }
 
 impl Config {
+    fn get_path() -> String {
+        return format!(
+            "{}/.config/poke.toml",
+            env::home_dir().unwrap().to_str().unwrap()
+        );
+    }
+
     /// Store an empty config to disk
-    pub fn create_empty(path: &str) -> Config {
+    pub fn create_empty() -> Config {
         Config {
             keystore: None,
             experimental: false,
             renew_keys: false,
-        }.save(path);
-        return Config::load(path).unwrap();
+        }.sync();
+        return Config::load().unwrap();
     }
 
     /// Try to load an existing configuration
-    pub fn load(path: &str) -> Option<Config> {
-        return match Path::new(path).exists() {
+    pub fn load() -> Option<Config> {
+        let path = Self::get_path();
+        return match Path::new(&path).exists() {
             true => {
                 let mut content = String::new();
                 let mut f = File::open(path).unwrap();
@@ -41,9 +52,29 @@ impl Config {
         };
     }
 
-    /// Save changes made to the struct to disk
-    pub fn save(&mut self, path: &str) {
+    /// Stores the absolute (canonical) path to a keystore from
+    /// the runtime relative path.
+    pub fn set_keystore(&mut self, path: &str) {
+        let p_slice = fs::canonicalize(&path).unwrap();
+        self.keystore = Some(String::from(p_slice.to_str().unwrap()));
+    }
+
+    /// Runs a piece of code if a setting in the config is met
+    /// 
+    /// TODO: make this more generic
+    pub fn if_no_keystore<F: 'static>(&self, function: F)
+    where
+        F: Fn(),
+    {
+        if self.keystore.is_some() {
+            function();
+        }
+    }
+
+    /// Sync changes made to the struct to disk
+    pub fn sync(&mut self) {
         let toml = serde_toml::to_string(self).unwrap();
+        let path = Self::get_path();
 
         let mut f = OpenOptions::new()
             .write(true)

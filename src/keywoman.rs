@@ -21,6 +21,8 @@ use std::{io::Read, path::PathBuf};
 /// It can also only be written once without triggering
 /// th `poke panic` command.
 pub fn generate_root(ks_path: String, ks_pw: String) -> String {
+    initialise_directory();
+
     let mut ks = KeyStore::load(&ks_path, &ks_pw).unwrap_or_else(|| {
         KeyStore::new(&ks_path, &ks_pw).expect("Failed to create new keystore!")
     });
@@ -67,4 +69,8 @@ fn get_key_contents_then_delete(name: &str) -> (String, String) {
     pub_root.push_str(".pub");
 
     return (key_content, pub_root);
+}
+
+fn initialise_directory() {
+    fs::create_dir_all(ssh::get_directory().to_str().unwrap()).unwrap();
 }
