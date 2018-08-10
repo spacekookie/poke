@@ -6,8 +6,8 @@ extern crate serde;
 extern crate lockchain_core as lockchain;
 extern crate toml as serde_toml;
 extern crate yubico;
-extern crate rand;
 extern crate hex;
+pub extern crate rand;
 
 pub extern crate question;
 pub extern crate rpassword;

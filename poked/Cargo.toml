@@ -6,3 +6,4 @@ authors = ["Katharina Fey <kookie@spacekookie.de>"]
 [dependencies]
 libpoke = { path = "../libpoke" }
 nix = "0.11"
+ssh_agent = { git = "https://github.com/ntrippar/ssh-agent" }
