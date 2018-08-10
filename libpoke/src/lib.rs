@@ -9,6 +9,10 @@ extern crate yubico;
 extern crate rand;
 extern crate hex;
 
+pub extern crate question;
+pub extern crate rpassword;
+pub extern crate colored;
+
 pub mod config;
 pub mod keystore;
 pub mod yubi;

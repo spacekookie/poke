@@ -5,4 +5,4 @@ authors = ["Katharina Fey <kookie@spacekookie.de>"]
 
 [dependencies]
 libpoke = { path = "../libpoke" }
-nix = "*"
+nix = "0.11"
