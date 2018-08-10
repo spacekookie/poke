@@ -1,0 +1,8 @@
+[package]
+name = "poked"
+version = "0.1.0"
+authors = ["Katharina Fey <kookie@spacekookie.de>"]
+
+[dependencies]
+libpoke = { path = "../libpoke" }
+nix = "*"

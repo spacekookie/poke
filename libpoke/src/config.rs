@@ -4,14 +4,10 @@
 //! metadata fields about the keystore as well as key-timeouts
 //! and...stuff
 
+use serde_toml;
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
 use std::{env, path::Path};
-
-use toml as serde_toml;
-
-// This is hardcoded for now – assumes UNIX system
-const CONFIG_PATH: &'static str = ".config/poke.toml";
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
@@ -60,9 +56,7 @@ impl Config {
     }
 
     /// Runs a piece of code if a setting in the config is met
-    /// 
-    /// TODO: make this more generic
-    pub fn if_no_keystore<F: 'static>(&self, function: F)
+    pub fn if_keystore<F: 'static>(&self, function: F)
     where
         F: Fn(),
     {
@@ -71,7 +65,7 @@ impl Config {
         }
     }
 
-    /// Sync changes made to the struct to disk
+    /// Sync changes made to the config to disk
     pub fn sync(&mut self) {
         let toml = serde_toml::to_string(self).unwrap();
         let path = Self::get_path();

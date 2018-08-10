@@ -1,0 +1,17 @@
+[package]
+name = "poke"
+description = "Powerful utility to manage ssh keys"
+version = "0.6.0-alpha"
+authors = ["Katharina 'spacekookie' Fey"]
+repository = "https://github.com/spacekookie/poke"
+license = "MPL-2.0"
+
+[dependencies]
+libpoke = { path = "../libpoke" }
+
+clap = { version = "2.0", features = ["wrap_help"] }
+rpassword = "2.0"
+colored = "1.0"
+
+lockchain-core = "0.2"
+question = "0.2.1"

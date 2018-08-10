@@ -1,2 +1,5 @@
 /target
 **/*.rs.bk
+
+# This is from my personal testing setup
+poke.vault

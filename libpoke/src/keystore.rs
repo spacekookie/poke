@@ -3,7 +3,7 @@
 use lockchain::{record::Record, Payload, Vault};
 
 /// The poke keystore
-pub(crate) struct KeyStore {
+pub struct KeyStore {
     vault: Vault,
 }
 

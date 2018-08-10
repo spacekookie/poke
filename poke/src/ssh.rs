@@ -2,14 +2,14 @@
 
 use std::{env::home_dir, path::PathBuf, process::Command};
 
-pub fn get_directory() -> PathBuf {
+pub(crate) fn get_directory() -> PathBuf {
     let mut base = PathBuf::from(home_dir().unwrap());
     base = base.join(".ssh").join("poke");
     return base;
 }
 
 /// Generate a new key and store it in $USER/.ssh/poke
-pub fn generate_key(path: &str, name: &str) {
+pub(crate) fn generate_key(path: &str, name: &str) {
     let foo = Command::new("ssh-keygen")
         .arg("-t")
         .arg("ed25519")
@@ -24,7 +24,7 @@ pub fn generate_key(path: &str, name: &str) {
 }
 
 /// Register a new key with a remote server
-pub fn send_key(file_path: &str, server: &str) {
+pub(crate) fn send_key(file_path: &str, server: &str) {
     println!("Adding public key to server...");
     let foo = Command::new("scp")
         .arg(file_path)
